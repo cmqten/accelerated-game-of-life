@@ -171,7 +171,7 @@ char* load_board(int* width, int* height, std::string filename)
     if (width) *width = width_l;
     if (height) *height = height_l;
 
-    // The third line us a string of '0' and '1' that represents the board
+    // The third line is a string of '0' and '1' that represents the board
     int size = width_l * height_l;
     char* board = (char*)calloc(sizeof(char), size);
     if (!board) {
