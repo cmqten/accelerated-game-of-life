@@ -1,13 +1,16 @@
-CXX=g++
-CXX_FLAGS=-Wall -O2
+CXX = g++
+CXX_FLAGS = -std=c++17 -Wall
+LD_FLAGS = -lstdc++fs
+OPT = -O2
+OBJ = board.o
 
 all: generate
 
-generate: generate.o
-	$(CXX) $(CXX_FLAGS) -o $@ $?
+generate: generate.o $(OBJ)
+	$(CXX) $(CXX_FLAGS) $(OPT) -o $@ $^ $(LD_FLAGS)
 
 %.o : %.cpp
-	$(CXX) $(CXX_FLAGS) -c $?
+	$(CXX) $(CXX_FLAGS) $(OPT) -c $^
 
 clean:
-	rm -rf generate *.o 
+	rm -rf generate $(OBJ) *.o 
