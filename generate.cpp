@@ -58,6 +58,6 @@ int main(int argc, char** argv)
     std::string filename(argv[4]);
     char* board = random_board(width, height, percent);
     save_board(board, width, height, filename);
-    free(board);
+    delete[] board;
     return 0;
 }
