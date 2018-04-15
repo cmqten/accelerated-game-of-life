@@ -1,7 +1,6 @@
 /**
  * Functions for loading and saving a board to a pbm file.
  */
-#include <cstdlib>
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -30,9 +29,7 @@ bool ascii_to_int(char* board, int width, int height)
     }
 
     int size = width * height;
-    for (int i = 0; i < size; ++i) {
-        board[i] -= '0';
-    }
+    for (int i = 0; i < size; ++i) board[i] -= '0';
     return true;
 }
 
@@ -59,9 +56,7 @@ bool int_to_ascii(char* board, int width, int height)
     }
 
     int size = width * height;
-    for (int i = 0; i < size; ++i) {
-        board[i] += '0';
-    }
+    for (int i = 0; i < size; ++i) board[i] += '0';
     return true;
 }
 
@@ -123,7 +118,8 @@ bool save_board(char* board, int width, int height, std::string filename)
  * considered invalid by this function, even though it may follow the 
  * netpbm specifications. save_board() is guaranteed to save a board that can be 
  * loaded by load_board(). Returns the board as a char array if the operation is 
- * successful, nullptr otherwise.
+ * successful, nullptr otherwise. The char array returned must be freed using
+ * delete[].
  */
 char* load_board(int* width, int* height, std::string filename)
 {
@@ -169,12 +165,9 @@ char* load_board(int* width, int* height, std::string filename)
 
     // The third line is a string of '0' and '1' that represents the board
     int size = width_l * height_l;
-    char* board = (char*)calloc(sizeof(char), size);
-    if (!board) {
-        std::cerr << "Error: calloc error" << std::endl;
-        return nullptr;
-    }
+    char* board = new char[size];
     file.read(board, size);
+
     // width and height are only set if the whole operation is successful
     if (width) *width = width_l;
     if (height) *height = height_l;

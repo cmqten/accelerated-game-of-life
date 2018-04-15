@@ -37,12 +37,12 @@ bool int_to_ascii(char* board, int width, int height);
  *      filename : filename to which the board will be saved
  * 
  * Returns:
- *      True if the operation is successful, false otherwise.
+ *      True if the operation is successful, false otherwise
  */
 bool save_board(char* board, int width, int height, std::string filename); 
 
 /**
- * Loads board from file.
+ * Loads board from file. The char array returned must be freed using delete[].
  * 
  * Arguments:
  *      width : pointer to an int variable that would store the width

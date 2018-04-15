@@ -48,17 +48,20 @@ int main(int argc, char** argv)
     // load_board tests
     int wl = -1;
     int hl = -1;
+    char* new_buf;
+
     std::cout << "===== load_board =====" << std::endl;
     assert_equal<char*>(nullptr, load_board(&wl, &hl, "board.cpp"), 
                         "not a pbm file");
     assert_equal<int>(-1, wl, "width did not change after failed load");
     assert_equal<int>(-1, hl, "height did not change after failed load");
 
-    char* new_buf = load_board(&wl, &hl, f);
+    new_buf = load_board(&wl, &hl, f);
     assert_not_equal<char*>(nullptr, new_buf, "successful load");
     assert_buf_equal(new_buf, buf3, s, "board correctly loaded to buffer");
     assert_equal<int>(w, wl, "width correctly loaded");
     assert_equal<int>(h, hl, "height correctly loaded");
+    delete[] new_buf;
     
     std::string rm_cmd = "rm -f " + f;
     system(rm_cmd.c_str());

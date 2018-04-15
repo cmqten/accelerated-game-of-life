@@ -4,7 +4,7 @@ LD_FLAGS =
 
 EXE = generate board_test
 OPT = -O2
-OBJ = board.o
+OBJ = board.o unit_test.o
 
 all: $(EXE)
 
