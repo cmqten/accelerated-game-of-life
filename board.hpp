@@ -15,13 +15,15 @@
 
 /**
  * Converts an array of '0' and '1' char to an array of 0 and 1 int. The
- * precondition is that it is an array of only '0' and '1'
+ * precondition is that it is an array of only '0' and '1'. Returns true if the 
+ * operation is successful, false otherwise.
  */
 bool ascii_to_int(char* board, int width, int height);
 
 /**
  * Converts an array of 0 and 1 int to an array of '0' and '1' char. The
- * precondition is that it is an array of only 0 and 1.
+ * precondition is that it is an array of only 0 and 1. Returns true if the 
+ * operation is successful, false otherwise.
  */
 bool int_to_ascii(char* board, int width, int height);
 
@@ -35,9 +37,9 @@ bool int_to_ascii(char* board, int width, int height);
  *      filename : filename to which the board will be saved
  * 
  * Returns:
- *      None
+ *      True if the operation is successful, false otherwise.
  */
-void save_board(char* board, int width, int height, std::string filename); 
+bool save_board(char* board, int width, int height, std::string filename); 
 
 /**
  * Loads board from file.

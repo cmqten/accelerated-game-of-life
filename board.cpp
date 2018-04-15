@@ -1,7 +1,6 @@
 /**
  * Functions for loading and saving a board to a pbm file.
  */
-#include <experimental/filesystem>
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
@@ -79,21 +78,21 @@ bool int_to_ascii(char* board, int width, int height)
  * information about the pbm format, go to: 
  * http://netpbm.sourceforge.net/doc/pbm.html
  */
-void save_board(char* board, int width, int height, std::string filename) 
+bool save_board(char* board, int width, int height, std::string filename) 
 {
     if (!board) {
         std::cerr << "Error: board can't be null" << std::endl;
-        return;
+        return false;
     }
     if (!in_range(width, MIN_WIDTH, MAX_WIDTH)) {
         std::cerr << "Error: width must be between " << MIN_WIDTH << " and ";
         std::cerr << MAX_WIDTH << std::endl;
-        return;
+        return false;
     }
     if (!in_range(height, MIN_HEIGHT, MAX_HEIGHT)) {
         std::cerr << "Error: height must be between " << MIN_HEIGHT << " and ";
         std::cerr << MAX_HEIGHT << std::endl;
-        return;
+        return false;
     }
 
     int size = width * height;
@@ -102,12 +101,13 @@ void save_board(char* board, int width, int height, std::string filename)
 
     if (!file) {
         std::cerr << "Error: file is unwriteable" << std::endl;
-        return;
+        return false;
     }
     file << "P1" << std::endl;
     file << width << " " << height << std::endl;
     file.write(board, size);
     file.close();
+    return true;
 }
 
 /**
