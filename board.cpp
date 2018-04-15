@@ -13,21 +13,7 @@
  */
 bool ascii_to_int(char* board, int width, int height)
 {
-    if (!board) {
-        std::cerr << "Error: board can't be null" << std::endl;
-        return false;
-    }
-    if (!in_range(width, MIN_WIDTH, MAX_WIDTH)) {
-        std::cerr << "Error: width must be between " << MIN_WIDTH << " and ";
-        std::cerr << MAX_WIDTH << std::endl;
-        return false;
-    }
-    if (!in_range(height, MIN_HEIGHT, MAX_HEIGHT)) {
-        std::cerr << "Error: height must be between " << MIN_HEIGHT << " and ";
-        std::cerr << MAX_HEIGHT << std::endl;
-        return false;
-    }
-
+    if (!board_width_height_okay(board, width, height)) return false;
     int size = width * height;
     for (int i = 0; i < size; ++i) board[i] -= '0';
     return true;
@@ -40,69 +26,23 @@ bool ascii_to_int(char* board, int width, int height)
  */
 bool int_to_ascii(char* board, int width, int height)
 {
-    if (!board) {
-        std::cerr << "Error: board can't be null" << std::endl;
-        return false;
-    }
-    if (!in_range(width, MIN_WIDTH, MAX_WIDTH)) {
-        std::cerr << "Error: width must be between " << MIN_WIDTH << " and ";
-        std::cerr << MAX_WIDTH << std::endl;
-        return false;
-    }
-    if (!in_range(height, MIN_HEIGHT, MAX_HEIGHT)) {
-        std::cerr << "Error: height must be between " << MIN_HEIGHT << " and ";
-        std::cerr << MAX_HEIGHT << std::endl;
-        return false;
-    }
-
+    if (!board_width_height_okay(board, width, height)) return false;
     int size = width * height;
     for (int i = 0; i < size; ++i) board[i] += '0';
     return true;
 }
 
 /**
- * Saves board as a plain pbm file with the following format: 
- * 
- * P1
- * <width> <height>
- * <board>
- * 
- * There are no whitespaces before each line, and each line ends with a newline
- * character. The board must be an array of '0' and '1' characters. It is saved 
- * as a long string of '0' and '1', with no withspaces in between. For more
- * information about the pbm format, go to: 
- * http://netpbm.sourceforge.net/doc/pbm.html
+ * Generates a random board of the specified size and percent. Returns nullptr
+ * if any of the arguments are invalid, returns a generated board otherwise.
  */
-bool save_board(char* board, int width, int height, std::string filename) 
+char* random_board(int width, int height, int percent) 
 {
-    if (!board) {
-        std::cerr << "Error: board can't be null" << std::endl;
-        return false;
-    }
-    if (!in_range(width, MIN_WIDTH, MAX_WIDTH)) {
-        std::cerr << "Error: width must be between " << MIN_WIDTH << " and ";
-        std::cerr << MAX_WIDTH << std::endl;
-        return false;
-    }
-    if (!in_range(height, MIN_HEIGHT, MAX_HEIGHT)) {
-        std::cerr << "Error: height must be between " << MIN_HEIGHT << " and ";
-        std::cerr << MAX_HEIGHT << std::endl;
-        return false;
-    }
-
     int size = width * height;
-    std::ofstream file;
-    file.open(filename);
-
-    if (!file) {
-        std::cerr << "Error: file is unwriteable" << std::endl;
-        return false;
-    }
-    file << "P1" << std::endl;
-    file << width << " " << height << std::endl;
-    file.write(board, size);
-    file.close();
-    return true;
+    char* board = new char[size];
+    srand(time(nullptr));
+    for (int i = 0; i < size; ++i) board[i] = ((rand() % 100) < percent) + '0'; 
+    return board;
 }
 
 /**
@@ -120,6 +60,9 @@ bool save_board(char* board, int width, int height, std::string filename)
  * loaded by load_board(). Returns the board as a char array if the operation is 
  * successful, nullptr otherwise. The char array returned must be freed using
  * delete[].
+ * 
+ * For more information about the pbm format, go to: 
+ * http://netpbm.sourceforge.net/doc/pbm.html
  */
 char* load_board(int* width, int* height, std::string filename)
 {
@@ -172,4 +115,36 @@ char* load_board(int* width, int* height, std::string filename)
     if (width) *width = width_l;
     if (height) *height = height_l;
     return board;
+}
+
+/**
+ * Saves board as a plain pbm file with the following format: 
+ * 
+ * P1
+ * <width> <height>
+ * <board>
+ * 
+ * There are no whitespaces before each line, and each line ends with a newline
+ * character. The board must be an array of '0' and '1' characters. It is saved 
+ * as a long string of '0' and '1', with no withspaces in between. 
+ * 
+ * For more information about the pbm format, go to: 
+ * http://netpbm.sourceforge.net/doc/pbm.html
+ */
+bool save_board(char* board, int width, int height, std::string filename) 
+{
+    if (!board_width_height_okay(board, width, height)) return false;
+    int size = width * height;
+    std::ofstream file;
+    file.open(filename);
+
+    if (!file) {
+        std::cerr << "Error: file is unwriteable" << std::endl;
+        return false;
+    }
+    file << "P1" << std::endl;
+    file << width << " " << height << std::endl;
+    file.write(board, size);
+    file.close();
+    return true;
 }

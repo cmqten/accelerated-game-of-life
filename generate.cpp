@@ -16,19 +16,6 @@ static inline void exit_error(std::string msg)
     exit(1);
 }
 
-/**
- * Generates a random board of the specified size and percent. Throws an error
- * if something goes wrong.
- */
-char* random_board(int width, int height, int percent) 
-{
-    int size = width * height;
-    char* board = new char[size];
-    srand(time(nullptr));
-    for (int i = 0; i < size; ++i) board[i] = ((rand() % 100) < percent) + '0'; 
-    return board;
-}
-
 int main(int argc, char** argv) 
 {
     if (argc != 5) exit_error("Usage: generate WIDTH HEIGHT PERCENT FILENAME");
