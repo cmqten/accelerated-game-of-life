@@ -11,6 +11,8 @@
 #define MIN_HEIGHT 1
 #define MAX_HEIGHT 32768
 
+#define in_range(val, min, max) ((val) >= (min) && (val) <= (max))
+
 /**
  * Converts an array of '0' and '1' char to an array of 0 and 1 int. The
  * precondition is that it is an array of only '0' and '1'

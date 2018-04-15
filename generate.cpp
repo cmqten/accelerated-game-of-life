@@ -13,7 +13,7 @@
  */
 static inline void exit_error(std::string msg) 
 {
-    std::cerr << "Error: " << msg << std::endl;
+    std::cerr << msg << std::endl;
     exit(1);
 }
 
@@ -34,7 +34,6 @@ char* random_board(int width, int height, int percent)
     for (int i = 0; i < size; ++i) {
         board[i] = ((rand() % 100) < percent) + '0'; 
     }
-
     return board;
 }
 
@@ -49,21 +48,23 @@ int main(int argc, char** argv)
      */
     int width = strtol(argv[1], NULL, 10);
     if (errno) 
-        exit_error("Width decimal literal overflow/underflow");
-    if (width < 1 || width > 32768) 
-        exit_error("Width must be a decimal literal between 1 and 32768");
+        exit_error("Error: width overflow/underflow");
+    if (!in_range(width, MIN_WIDTH, MAX_WIDTH)) 
+        exit_error("Error: width must be between " + std::to_string(MIN_WIDTH) 
+                   + " and " + std::to_string(MAX_WIDTH));
 
     int height = strtol(argv[2], NULL, 10);
     if (errno) 
-        exit_error("Height decimal literal overflow/underflow");
-    if (height < 1 || height > 32768) 
-        exit_error("Height must be a decimal literal between 1 and 32768");
+        exit_error("Error: height overflow/underflow");
+    if (!in_range(height, MIN_HEIGHT, MAX_HEIGHT)) 
+        exit_error("Error: height must be between " + std::to_string(MIN_HEIGHT) 
+                   + " and " + std::to_string(MAX_HEIGHT));
 
     int percent = strtol(argv[3], NULL, 10);
     if (errno) 
-        exit_error("Percent decimal literal overflow/underflow");
-    if (percent < 1 || percent > 100) 
-        exit_error("Percent must be between 1 and 100");
+        exit_error("Error: percent overflow/underflow");
+    if (!in_range(percent, 1, 100)) 
+        exit_error("Error: percent must be between 1 and 100");
 
     std::string filename(argv[4]);
 
@@ -71,6 +72,5 @@ int main(int argc, char** argv)
     if (!board) return 1;
     save_board(board, width, height, filename);
     free(board);
-
     return 0;
 }

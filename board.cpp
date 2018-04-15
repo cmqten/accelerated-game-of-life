@@ -9,15 +9,6 @@
 #include "board.hpp"
 
 /**
- * Helper function to check if a number is in range of two other numbers, 
- * inclusive.
- */
-static inline bool in_range(int val, int min, int max)
-{
-    return val >= min && val <= max;
-}
-
-/**
  * Converts an array of '0' and '1' char to an array of 0 and 1 int. The
  * precondition is that it is an array of only '0' and '1', so subtracting '0'
  * is sufficient. Returns true if the operation is successful, false otherwise.
@@ -28,16 +19,17 @@ bool ascii_to_int(char* board, int width, int height)
         std::cerr << "Error: board can't be null" << std::endl;
         return false;
     }
-    if (in_range(width, MIN_WIDTH, MAX_WIDTH)) {
+    if (!in_range(width, MIN_WIDTH, MAX_WIDTH)) {
         std::cerr << "Error: width must be between " << MIN_WIDTH << " and ";
         std::cerr << MAX_WIDTH << std::endl;
         return false;
     }
-    if (in_range(height, MIN_HEIGHT, MAX_HEIGHT)) {
+    if (!in_range(height, MIN_HEIGHT, MAX_HEIGHT)) {
         std::cerr << "Error: height must be between " << MIN_HEIGHT << " and ";
         std::cerr << MAX_HEIGHT << std::endl;
         return false;
     }
+
     int size = width * height;
     for (int i = 0; i < size; ++i) {
         board[i] -= '0';
@@ -56,16 +48,17 @@ bool int_to_ascii(char* board, int width, int height)
         std::cerr << "Error: board can't be null" << std::endl;
         return false;
     }
-    if (in_range(width, MIN_WIDTH, MAX_WIDTH)) {
+    if (!in_range(width, MIN_WIDTH, MAX_WIDTH)) {
         std::cerr << "Error: width must be between " << MIN_WIDTH << " and ";
         std::cerr << MAX_WIDTH << std::endl;
         return false;
     }
-    if (in_range(height, MIN_HEIGHT, MAX_HEIGHT)) {
+    if (!in_range(height, MIN_HEIGHT, MAX_HEIGHT)) {
         std::cerr << "Error: height must be between " << MIN_HEIGHT << " and ";
         std::cerr << MAX_HEIGHT << std::endl;
         return false;
     }
+
     int size = width * height;
     for (int i = 0; i < size; ++i) {
         board[i] += '0';
@@ -92,19 +85,25 @@ void save_board(char* board, int width, int height, std::string filename)
         std::cerr << "Error: board can't be null" << std::endl;
         return;
     }
-    if (width < MIN_WIDTH || width > MAX_WIDTH) {
+    if (!in_range(width, MIN_WIDTH, MAX_WIDTH)) {
         std::cerr << "Error: width must be between " << MIN_WIDTH << " and ";
         std::cerr << MAX_WIDTH << std::endl;
         return;
     }
-    if (height < MIN_HEIGHT || height > MAX_HEIGHT) {
+    if (!in_range(height, MIN_HEIGHT, MAX_HEIGHT)) {
         std::cerr << "Error: height must be between " << MIN_HEIGHT << " and ";
         std::cerr << MAX_HEIGHT << std::endl;
         return;
     }
+
     int size = width * height;
     std::ofstream file;
     file.open(filename);
+
+    if (!file) {
+        std::cerr << "Error: file is unwriteable" << std::endl;
+        return;
+    }
     file << "P1" << std::endl;
     file << width << " " << height << std::endl;
     file.write(board, size);
@@ -128,12 +127,12 @@ void save_board(char* board, int width, int height, std::string filename)
  */
 char* load_board(int* width, int* height, std::string filename)
 {
-    if (!std::experimental::filesystem::exists(filename)) {
-        std::cerr << "Error: file doesn't exist" << std::endl;
-        return nullptr;
-    }
     std::ifstream file;
     file.open(filename);
+    if (!file) {
+        std::cerr << "Error: file doesn't exist or is unreadable" << std::endl;
+        return nullptr;
+    }
 
     // Checks for the magic number "P1"
     std::string line;
@@ -148,28 +147,25 @@ char* load_board(int* width, int* height, std::string filename)
     char* remain;
     int width_l = strtol(line.c_str(), &remain, 10);
     if (errno) {
-        std::cerr << "Error: width decimal literal overflow/underflow \n";
+        std::cerr << "Error: width overflow/underflow \n";
         return nullptr;
     }
-    if (width_l < 1 || width_l > 32768) {
-        std::cerr << "Error: width must be a decimal literal between";
-        std::cerr << " 1 and 32768" << std::endl;
+    if (!in_range(width_l, MIN_WIDTH, MAX_WIDTH)) {
+        std::cerr << "Error: width must be between " << MIN_WIDTH << " and ";
+        std::cerr << MAX_WIDTH << std::endl;
         return nullptr;
     }
 
     int height_l = strtol(remain, nullptr, 10);
     if (errno) {
-        std::cerr << "Error: height decimal literal overflow/underflow \n";
+        std::cerr << "Error: height overflow/underflow" << std::endl;
         return nullptr;
     }
-    if (height_l < 1 || height_l > 32768) {
-        std::cerr << "Error: height must be a decimal literal between";
-        std::cerr << " 1 and 32768" << std::endl;
+    if (!in_range(height_l, MIN_HEIGHT, MAX_HEIGHT)) {
+        std::cerr << "Error: height must be between " << MIN_HEIGHT << " and ";
+        std::cerr << MAX_HEIGHT << std::endl;
         return nullptr;
     }
-
-    if (width) *width = width_l;
-    if (height) *height = height_l;
 
     // The third line is a string of '0' and '1' that represents the board
     int size = width_l * height_l;
@@ -179,5 +175,8 @@ char* load_board(int* width, int* height, std::string filename)
         return nullptr;
     }
     file.read(board, size);
+    // width and height are only set if the whole operation is successful
+    if (width) *width = width_l;
+    if (height) *height = height_l;
     return board;
 }
