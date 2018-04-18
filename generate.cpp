@@ -23,19 +23,19 @@ int main(int argc, char** argv)
     /**
      * Limits the maximum dimensions to 32768 x 32768 so that there is no
      * risk of overflowing when calculating the size of the image. Also, don't
-     * want the image to be too big because the GPU may run out of memory.
+     * want the image to be too big because the system may run out of memory.
      */
     int width = strtol(argv[1], NULL, 10);
     if (errno) exit_error("Error: width overflow/underflow");
     if (!in_range(width, MIN_WIDTH, MAX_WIDTH)) 
         exit_error("Error: width must be between " + std::to_string(MIN_WIDTH) 
-                   + " and " + std::to_string(MAX_WIDTH));
+            + " and " + std::to_string(MAX_WIDTH));
 
     int height = strtol(argv[2], NULL, 10);
     if (errno) exit_error("Error: height overflow/underflow");
     if (!in_range(height, MIN_HEIGHT, MAX_HEIGHT)) 
         exit_error("Error: height must be between " + std::to_string(MIN_HEIGHT) 
-                   + " and " + std::to_string(MAX_HEIGHT));
+            + " and " + std::to_string(MAX_HEIGHT));
 
     int percent = strtol(argv[3], NULL, 10);
     if (errno) exit_error("Error: percent overflow/underflow");

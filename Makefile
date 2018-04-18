@@ -2,9 +2,9 @@ CXX = g++
 CXX_FLAGS = -std=c++17 -Wall -Wno-unused-function -g
 LD_FLAGS = 
 
-EXE = generate board_test
+EXE = generate
 OPT = -O2
-OBJ = board.o unit_test.o gol_cpu.o
+OBJ = board.o 
 
 all: $(EXE)
 
