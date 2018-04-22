@@ -1,10 +1,10 @@
 CXX = g++
-CXX_FLAGS = -std=c++17 -Wall -Wno-unused-function -g
+CXX_FLAGS = -std=c++17 -Wall -Wno-unused-function
 LD_FLAGS = 
 
 EXE = generate
 OPT = -O2
-OBJ = board.o 
+OBJ = game_of_life.o
 
 all: $(EXE)
 
