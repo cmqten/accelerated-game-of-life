@@ -4,8 +4,46 @@
 #ifndef __UTIL_HPP__
 #define __UTIL_HPP__
 
+#include <chrono>
+#include <cstdint>
 #include <stdexcept>
 #include <type_traits>
+
+#define swap_ptr(t, a, b) \
+{ \
+    a = (t)((uintptr_t)a ^ (uintptr_t)b); \
+    b = (t)((uintptr_t)a ^ (uintptr_t)b); \
+    a = (t)((uintptr_t)a ^ (uintptr_t)b); \
+}
+
+class my_timer
+{
+private:
+    std::chrono::time_point<std::chrono::high_resolution_clock> _start;
+    bool _started;
+
+public:
+    inline my_timer() : _started(false) {};
+
+    inline void start() 
+    {
+        if (!_started) {
+            _start = std::chrono::high_resolution_clock::now();
+            _started = true;
+        } 
+    };
+
+    inline double stop()
+    {
+        if (_started) {
+            _started = false;
+            auto end = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> seconds = end - _start;
+            return seconds.count();
+        }
+        return -1.0;
+    };
+};
 
 inline bool in_range(int val, int min, int max) 
 {

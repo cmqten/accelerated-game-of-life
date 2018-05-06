@@ -3,13 +3,15 @@
 #include <fstream>
 #include <iostream>
 #include "game_of_life.hpp"
+#include "simulators.hpp"
 
 /**
  * A copy of buf is made to ensure that the board is allocated correctly (using
  * new) since board is deallocated using delete[] in the destructor of 
  * game_of_life.
  */
-game_of_life* game_of_life::create_from_buffer(char* buf, int width, int height)
+game_of_life* game_of_life::create_from_buffer(char* buf, int width, int height,
+    std::function<void(char*, int, int, int)> simulator)
 {
     throw_board_null<std::invalid_argument>(buf);
     throw_width_out_of_range<std::invalid_argument>(width);
@@ -18,14 +20,15 @@ game_of_life* game_of_life::create_from_buffer(char* buf, int width, int height)
     int size = width * height;
     char* board = new char[size];
     memcpy(board, buf, size);
-    return new game_of_life(board, width, height);
+    return new game_of_life(board, width, height, simulator);
 }
 
 /**
  * The file must be a plain pbm file with the specified format in the header
  * file game_of_life.hpp.
  */
-game_of_life* game_of_life::create_from_file(const std::string& filename) 
+game_of_life* game_of_life::create_from_file(const std::string& filename,
+    std::function<void(char*, int, int, int)> simulator) 
 {
     std::ifstream file;
     file.open(filename);
@@ -53,10 +56,11 @@ game_of_life* game_of_life::create_from_file(const std::string& filename)
     file.read(board, size);   
     file.close();
     for (int i = 0; i < size; ++i) board[i] -= '0'; // ascii to int
-    return new game_of_life(board, width, height);
+    return new game_of_life(board, width, height, simulator);
 }
 
-game_of_life* game_of_life::create_random(int width, int height, int percent)
+game_of_life* game_of_life::create_random(int width, int height, int percent,
+    std::function<void(char*, int, int, int)> simulator)
 {
     throw_width_out_of_range<std::invalid_argument>(width);
     throw_height_out_of_range<std::invalid_argument>(height);
@@ -67,12 +71,24 @@ game_of_life* game_of_life::create_random(int width, int height, int percent)
     char* board = new char[size];
     srand(time(nullptr));
     for (int i = 0; i < size; ++i) board[i] = ((rand() % 100) < percent);
-    return new game_of_life(board, width, height);
+    return new game_of_life(board, width, height, simulator);
 }
 
-game_of_life::game_of_life(char* board, int width, int height) : 
-    board(board), width(width), height(height), size(width * height) 
+game_of_life::game_of_life(char* board, int width, int height,
+    std::function<void(char*, int, int, int)> simulator) : 
+    board(board), width(width), height(height), size(width * height),
+    simulator(simulator)
 { 
+}
+
+/**
+ * Copy constructor
+ */
+game_of_life::game_of_life(const game_of_life& other) : width(other.width), 
+    height(other.height), size(other.size), simulator(other.simulator)
+{
+    board = new char[size];
+    memcpy(board, other.board, size);
 }
 
 game_of_life::~game_of_life() 
@@ -82,13 +98,20 @@ game_of_life::~game_of_life()
 
 bool game_of_life::operator==(const game_of_life& other) const
 {
-    return width == other.width && height == other.height &&
-        !memcmp(board, other.board, size);
+    return width == other.width && height == other.height && size == other.size
+        && !memcmp(board, other.board, size);
 }
 
 bool game_of_life::operator!=(const game_of_life& other) const
 {
     return !operator==(other);
+}
+
+char* game_of_life::get_board()
+{
+    char* board_copy = new char[size];
+    memcpy(board_copy, board, size);
+    return board_copy;
 }
 
 void game_of_life::save(const std::string& filename) const
@@ -105,4 +128,13 @@ void game_of_life::save(const std::string& filename) const
     file.write(buf, size);
     file.close();
     delete[] buf;
+}
+
+double game_of_life::simulate(int gens)
+{
+    if (simulator == nullptr) return -1.0;
+    my_timer timer;
+    timer.start();
+    simulator(board, width, height, gens);
+    return timer.stop();
 }

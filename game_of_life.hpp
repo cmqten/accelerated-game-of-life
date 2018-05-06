@@ -21,6 +21,7 @@
 #ifndef __GAME_OF_LIFE_HPP__
 #define __GAME_OF_LIFE_HPP__
 
+#include <functional>
 #include <string>
 #include "util.hpp"
 
@@ -29,9 +30,9 @@
  * the system from running out of memory.
  */
 const int min_width = 1;
-const int max_width = 32768;
+const int max_width = 16384;
 const int min_height = 1;
-const int max_height = 32768;
+const int max_height = 16384;
 
 /**
  * Encapsulates the buffer that represents the game of life board, as well as 
@@ -41,13 +42,24 @@ const int max_height = 32768;
 class game_of_life 
 {
 private:
-    explicit game_of_life(char* board, int width, int height);
+    explicit game_of_life(char* board, int width, int height, 
+        std::function<void(char*, int, int, int)> simulator);
+    
+    char* board;
 
 public:
-    const char* board;
     const int width;
     const int height;
     const int size;
+
+    /**
+     * This function simulates game of life. Default value is nullptr, must be
+     * set before calling the simulate() method. The post-condition is that the
+     * resulting board must be in the same buffer passed as the argument.
+     */
+    std::function<void(char*, int, int, int)> simulator;
+
+    explicit game_of_life(const game_of_life& other);
 
     ~game_of_life();
 
@@ -56,10 +68,22 @@ public:
     bool operator!=(const game_of_life& other) const;
 
     /**
+     * Returns a copy of the board. Must be freed using delete[].
+     */ 
+    char* get_board();
+
+    /**
      * Saves the board as the specified filename. Throws a runtime_error if the
      * file cannot be opened for writing. 
      */
     void save(const std::string& filename) const;
+
+    /**
+     * Simulates the game of life board for the specified number of generations
+     * and returns the simulation time in seconds. Does nothing and returns -1.0
+     * if simulate_func is set to nullptr.
+     */
+    double simulate(int gens);
 
     /**
      * Creates a board from a pre-existing buffer of 0 and 1 integers. The 
@@ -67,7 +91,8 @@ public:
      * instance of game_of_life. Throws an invalid_argument if the buffer is 
      * null or the dimensions are out of range.
      */
-    static game_of_life* create_from_buffer(char* buf, int width, int height);
+    static game_of_life* create_from_buffer(char* buf, int width, int height,
+        std::function<void(char*, int, int, int)> simulator = nullptr);
     
     /**
      * Loads a board from a plain pbm file. Throws runtime_error if the file 
@@ -75,14 +100,16 @@ public:
      * overflow the long datatype, or out_of_range if the dimensions are out
      * of the min and max ranges specified above.
      */
-    static game_of_life* create_from_file(const std::string& filename);
+    static game_of_life* create_from_file(const std::string& filename,
+        std::function<void(char*, int, int, int)> simulator = nullptr);
     
     /**
      * Generates a random board of the specified width, height, and population
      * percentage. Throws an invalid_argument if any of the width, height, or 
      * percent are out of range.
      */
-    static game_of_life* create_random(int width, int height, int percent);
+    static game_of_life* create_random(int width, int height, int percent,
+        std::function<void(char*, int, int, int)> simulator = nullptr);
 };
 
 /**

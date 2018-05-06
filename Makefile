@@ -1,10 +1,10 @@
 CXX = g++
 CXX_FLAGS = -std=c++17 -Wall -Wno-unused-function
 LD_FLAGS = 
-
-EXE = generate
 OPT = -O2
-OBJ = game_of_life.o
+
+EXE = generate simulate
+OBJ = game_of_life.o game_of_life_cpu_sequential.o
 
 all: $(EXE)
 

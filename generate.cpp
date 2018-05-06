@@ -8,18 +8,13 @@
 #include "game_of_life.hpp"
 #include "util.hpp"
 
-/**
- * Prints an error message and exits with a non-zero status code.
- */
-static inline void exit_error(std::string msg) 
-{
-    std::cerr << msg << std::endl;
-    exit(1);
-}
-
 int main(int argc, char** argv) 
 {
-    if (argc != 5) exit_error("Usage: generate WIDTH HEIGHT PERCENT FILENAME");
+    if (argc != 5) {
+        std::cerr << "Usage: generate WIDTH HEIGHT PERCENT FILENAME"
+            << std::endl;
+        return 1;
+    }
 
     int width = strtol(argv[1], NULL, 10);
     throw_non_zero<std::overflow_error>(errno, "width overflow/underflow");
