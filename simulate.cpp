@@ -5,7 +5,7 @@
 int main(int argc, char** argv)
 {
     int gens = 1000;
-    game_of_life* gol_seq = game_of_life::create_random(1024, 1024, 50,
+    game_of_life* gol_seq = game_of_life::create_random(8, 1024, 50,
         game_of_life_cpu_sequential);
     game_of_life* gol_simd = new game_of_life(*gol_seq);
     gol_simd->simulator = game_of_life_cpu_simd;
