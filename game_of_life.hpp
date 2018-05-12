@@ -45,6 +45,8 @@ private:
     explicit game_of_life(char* board, int width, int height, 
         std::function<void(char*, int, int, int)> simulator);
     
+    explicit game_of_life(const game_of_life& other);
+    
     char* board;
 
 public:
@@ -58,8 +60,6 @@ public:
      * resulting board must be in the same buffer passed as the argument.
      */
     std::function<void(char*, int, int, int)> simulator;
-
-    explicit game_of_life(const game_of_life& other);
 
     ~game_of_life();
 
@@ -93,6 +93,11 @@ public:
      */
     static game_of_life* create_from_buffer(char* buf, int width, int height,
         std::function<void(char*, int, int, int)> simulator = nullptr);
+    
+    /**
+     * Creates a copy of an existing game_of_life instance.
+     */
+    static game_of_life* create_from_existing(game_of_life* other);
     
     /**
      * Loads a board from a plain pbm file. Throws runtime_error if the file 

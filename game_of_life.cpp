@@ -24,6 +24,14 @@ game_of_life* game_of_life::create_from_buffer(char* buf, int width, int height,
 }
 
 /**
+ * Simply calls the copy constructor.
+ */
+game_of_life* game_of_life::create_from_existing(game_of_life* other) 
+{
+    return new game_of_life(*other);
+}
+
+/**
  * The file must be a plain pbm file with the specified format in the header
  * file game_of_life.hpp.
  */
