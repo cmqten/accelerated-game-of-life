@@ -1,5 +1,5 @@
 CXX = g++
-CXX_FLAGS = -std=c++17 -Wall -Wno-unused-function -msse2 -mssse3
+CXX_FLAGS = -std=c++17 -Wall -msse2 -mssse3
 LD_FLAGS = 
 OPT = -O2
 

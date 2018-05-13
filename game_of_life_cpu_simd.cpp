@@ -206,25 +206,27 @@ static void game_of_life_cpu_simd_16(char* board, int width, int height,
     optimized even further. See simulate_row_simd_16_e(). */
     if (width == 16) {
         for (int i = 0; i < gens; ++i) {
+            // First row
             simulate_row_simd_16_e(board, buf, width, height, 0, height - 1, 1);
 
-            for (int y = 1; y < height - 1; ++y)
+            for (int y = 1; y < height - 1; ++y) // Middle rows
                 simulate_row_simd_16_e(board, buf, width, height, y, y-1, y+1);
 
             simulate_row_simd_16_e(board, buf, width, height, height - 1, 
-                height - 2, 0);
+                height - 2, 0); // Last row
             swap_ptr(char*, board, buf);
         }
     }
     else {
         for (int i = 0; i < gens; ++i) {
+            // First row
             simulate_row_simd_16_g(board, buf, width, height, 0, height - 1, 1);
 
-            for (int y = 1; y < height - 1; ++y)
+            for (int y = 1; y < height - 1; ++y) // Middle rows
                 simulate_row_simd_16_g(board, buf, width, height, y, y-1, y+1);
 
             simulate_row_simd_16_g(board, buf, width, height, height - 1,
-                height - 2, 0);
+                height - 2, 0); // Last row
             swap_ptr(char*, board, buf);
         }
     }
@@ -304,7 +306,6 @@ static inline void simulate_row_simd_int_g(char* board, char* buf, int width,
     int inorth = ynorth * width;
     int isouth = ysouth * width;
 
-    // Pointers to the start of the north, current, and south rows
     char* rnorth = board + inorth;
     char* row = board + irow;
     char* rsouth = board + isouth;
@@ -398,30 +399,30 @@ static void game_of_life_cpu_simd_int(char* board, int width, int height,
     if (width == vec_len) {
         for (int i = 0; i < gens; ++i) {
             simulate_row_simd_int_e<T>(board, buf, width, height, 0, 
-                height - 1, 1);
+                height - 1, 1); // First row
             
-            for (int y = 1; y < height - 1; ++y) {
+            for (int y = 1; y < height - 1; ++y) { // Middle rows
                 simulate_row_simd_int_e<T>(board, buf, width, height, y, y - 1, 
                     y + 1);
             }
 
             simulate_row_simd_int_e<T>(board, buf, width, height, height - 1,
-                height - 2, 0);
+                height - 2, 0); // Last row
             swap_ptr(char*, board, buf);
         }
     }
     else {
         for (int i = 0; i < gens; ++i) {
             simulate_row_simd_int_g<T>(board, buf, width, height, 0, 
-                height - 1, 1);
+                height - 1, 1); // First row
 
-            for (int y = 1; y < height - 1; ++y) {
+            for (int y = 1; y < height - 1; ++y) { // Middle rows
                 simulate_row_simd_int_g<T>(board, buf, width, height, y, 
                     y - 1, y + 1);
             }
 
             simulate_row_simd_int_g<T>(board, buf, width, height, height - 1,
-                height - 2, 0);
+                height - 2, 0); // Last row
             swap_ptr(char*, board, buf);
         }
     }

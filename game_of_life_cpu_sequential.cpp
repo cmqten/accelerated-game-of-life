@@ -62,15 +62,17 @@ void game_of_life_cpu_sequential(char* board, int width, int height, int gens)
     int size = width * height;
     char* buf = new char[size];
     
+    /* To optimize performance, the first and last rows are handled separately
+    from the rest of the rows because some of their neighbors wrap around. This
+    prevents having to do a conditional check every iteration, which has 
+    significant overhead. */
     for (int i = 0; i < gens; ++i) {
-        // First row is a special case because the north neighbors wrap around.
-        simulate_row(board, buf, width, height, 0, height - 1, 1);
+        simulate_row(board, buf, width, height, 0, height - 1, 1); // First row
 
-        // Middle rows
-        for (int y = 1; y < height - 1; ++y)
+        for (int y = 1; y < height - 1; ++y) // Middle rows
             simulate_row(board, buf, width, height, y, y - 1, y + 1);
 
-        // Last row is a special case because the south neighbors wrap around.
+        // Last row
         simulate_row(board, buf, width, height, height - 1, height - 2, 0);
         swap_ptr(char*, board, buf);
     }
