@@ -1,12 +1,23 @@
-#include <cstdlib>
+/**
+ * Game of Life CPU SIMD
+ * 
+ * Optimized data parallel implementation of a Game of Life simulator using SIMD 
+ * operations. Uses SSE2 and SSSE3 extensions.
+ * 
+ * Due to some of the operations performed in this implementation such as x86
+ * vector extensions and unaligned memory accesses, this is not portable and is
+ * only guaranteed to work on an x86_64 system with the extensions specified 
+ * above.
+ */
 #include <cstring>
 #include <x86intrin.h>
 #include "simulators.hpp"
 #include "util.hpp"
 
 /**
- * Implementation which uses vectors of 16 8-bit integers. Uses SSE2 and SSSE3 
- * extensions.
+ * CPU SIMD 128-bit vector SSE2/SSSE3
+ * 
+ * Determines the next state of each cell in a vector of 16 cells.
  */
 static inline __m128i alive_simd_16(__m128i count, __m128i state)
 {
@@ -19,7 +30,15 @@ static inline __m128i alive_simd_16(__m128i count, __m128i state)
     );
 }
 
-static inline void calculate_row_eq_simd_16(char* board, char* buf, int width, 
+/**
+ * CPU SIMD 128-bit vector SSE2/SSSE3
+ * 
+ * If a whole row can fit in a single vector, simply rotate every row one cell 
+ * to the east or west to the get the west and east neighbors, respectively.
+ * 
+ * The _e in the function name stands for equal (width == size of vector).
+ */
+static inline void simulate_row_simd_16_e(char* board, char* buf, int width, 
     int height, int y, int ynorth, int ysouth)
 {
     int irow = y * width;
@@ -51,7 +70,17 @@ static inline void calculate_row_eq_simd_16(char* board, char* buf, int width,
     _mm_store_si128((__m128i*)(buf + irow), cells);
 }
 
-static inline void calculate_row_gt_simd_16(char* board, char* buf, int width, 
+/**
+ * CPU SIMD 128-bit vector SSE2/SSSE3
+ * 
+ * If the width of the board is larger than 16, the first and last vectors of 
+ * each row must be handled separately since their west and east neighbors, 
+ * respectively, wrap around. The middle vectors simply load the addresses 
+ * offset by one in both directions to access the west and east neighbors.
+ * 
+ * The _g in the function name stands for greater (width > size of vector).
+ */
+static inline void simulate_row_simd_16_g(char* board, char* buf, int width, 
     int height, int y, int ynorth, int ysouth)
 {
     int irow = y * width;
@@ -64,10 +93,11 @@ static inline void calculate_row_gt_simd_16(char* board, char* buf, int width,
     char* rsouth = board + isouth;
 
     /* First vector of every row is a special case because the west neighbors 
-    wrap around. For the west neighbors (nw, w, sw), theelements of the north 
-    neighbors, the cell themselves, and south neighbors, repectively, are 
-    shifted one to the east and the first index is replaced by the last cell in 
-    the row. A left shift is done because the system is little endian. */
+    wrap around. To access the west neighbors (nw, w, sw), the vectors of the 
+    north neighbors, the cell themselves, and south neighbors, repectively, are 
+    shifted one to the east and the first vector element is replaced by the last
+    cell in their respective rows. A left shift is done because the system is 
+    little endian. */
     __m128i cells;
     __m128i n_cells = _mm_loadu_si128((__m128i*)(rnorth));
     cells = n_cells;
@@ -95,8 +125,7 @@ static inline void calculate_row_gt_simd_16(char* board, char* buf, int width,
     cells = alive_simd_16(cells, r_cells);
     _mm_storeu_si128((__m128i*)(buf + irow), cells);
 
-    /* Middle vectors simply perform unaligned memory accesses to get their east
-    and west neighbors. */
+    // Middle vectors
     for (int x = 16; x < width - 16; x += 16) {
         int ieast = x + 1;
         int iwest = x - 1;
@@ -127,10 +156,11 @@ static inline void calculate_row_gt_simd_16(char* board, char* buf, int width,
     }
 
     /* Last vector of every row is a special case because the east neighbors 
-    wrap around. For the east neighbors (ne, e, se), the elements of the north 
-    neighbors, the cell themselves, and south neighbors, repectively, are 
-    shifted one to the west and the last index is replaced by the first cell in 
-    the row. A right shift is done because the system is little endian. */
+    wrap around. To access the east neighbors (ne, e, se), the vectors of the 
+    north neighbors, the cell themselves, and south neighbors, repectively, are 
+    shifted one to the west and the last vector element is replaced by the first
+    cell in their respective rows. A right shift is done because the system is 
+    little endian. */
     n_cells = _mm_loadu_si128((__m128i*)(rnorth + width - 16));
     cells = n_cells;
     nw_cells = _mm_loadu_si128((__m128i*)(rnorth + width - 17));
@@ -158,6 +188,11 @@ static inline void calculate_row_gt_simd_16(char* board, char* buf, int width,
     _mm_storeu_si128((__m128i*)(buf + irow + width - 16), cells);
 }
 
+/**
+ * CPU SIMD 128-bit vector SSE2/SSSE3
+ * 
+ * Simulator which processes 16 cells simultaneously using SIMD operations.
+ */
 static void game_of_life_cpu_simd_16(char* board, int width, int height, 
     int gens)
 {
@@ -167,32 +202,28 @@ static void game_of_life_cpu_simd_16(char* board, int width, int height,
     int size = width * height;
     char* buf = new char[size];
 
-    /* Special case if the width is equal to the length of the vector type (16) 
-    because the row is simply rotated to get the east and west neighbors */
+    /* Boards with width of 16 are handled separately because they can be 
+    optimized even further. See simulate_row_simd_16_e(). */
     if (width == 16) {
         for (int i = 0; i < gens; ++i) {
-            calculate_row_eq_simd_16(board, buf, width, height, 0, height-1, 1);
+            simulate_row_simd_16_e(board, buf, width, height, 0, height - 1, 1);
 
-            for (int y = 1; y < height - 1; ++y) {
-                calculate_row_eq_simd_16(board, buf, width, height, y, y - 1, 
-                    y + 1);
-            }
+            for (int y = 1; y < height - 1; ++y)
+                simulate_row_simd_16_e(board, buf, width, height, y, y-1, y+1);
 
-            calculate_row_eq_simd_16(board, buf, width, height, height - 1, 
+            simulate_row_simd_16_e(board, buf, width, height, height - 1, 
                 height - 2, 0);
             swap_ptr(char*, board, buf);
         }
     }
     else {
         for (int i = 0; i < gens; ++i) {
-            calculate_row_gt_simd_16(board, buf, width, height, 0, height-1, 1);
+            simulate_row_simd_16_g(board, buf, width, height, 0, height - 1, 1);
 
-            for (int y = 1; y < height - 1; ++y) {
-                calculate_row_gt_simd_16(board, buf, width, height, y, y - 1,
-                    y + 1);
-            }
+            for (int y = 1; y < height - 1; ++y)
+                simulate_row_simd_16_g(board, buf, width, height, y, y-1, y+1);
 
-            calculate_row_gt_simd_16(board, buf, width, height, height - 1,
+            simulate_row_simd_16_g(board, buf, width, height, height - 1,
                 height - 2, 0);
             swap_ptr(char*, board, buf);
         }
@@ -206,24 +237,12 @@ static void game_of_life_cpu_simd_16(char* board, int width, int height,
 }
 
 /**
- * Implementation which uses an integer type to simulate SIMD operations. This
- * hack works as follows:
- * 1. An address is interpreted as a pointer to an integer type and is 
- *   dereferenced as such in order to load multiple cells from memory at once.
- * 2. Regular addition of integers is done with the neighbor integer "vectors" 
- *   for every cell integer "vector" to get the neighbor count "vector". The 
- *   case where the sum of one cell will contaminate the next cell because the 
- *   carry in/out at the byte boundaries will never exist since the maximum sum 
- *   for every byte is 8, which is well below 255. The result should be an 
- *   n-byte integer "vector" in which each byte is between 0 and 8.
- * 3. alive_simd_int() performs a bunch of bitwise operations to determine
- *   whether the cells in the integer "vector" are alive or dead in the next 
- *   generation. Do not try to understand it, it just works.
+ * CPU SIMD integer type vector
  * 
- * This implementation is required because x86 does not provide intrinsics for 
- * vector sizes smaller than 64-bit. Due to the nature of this implementation,
- * it is not portable and will only work on little endian systems which allow
- * unaligned memory accesses, e.g., x86_64. 
+ * Determines the next state of each cell in the specified integer type. Since
+ * this is not a real SIMD vector type, a bitwise "hack" must be done under the 
+ * assumption that each byte in count is between 0 and 8, and each byte in state
+ * is either a 0 or 1.
  */
 template <class T>
 static inline T alive_simd_int(T count, T state)
@@ -232,8 +251,17 @@ static inline T alive_simd_int(T count, T state)
         (T)0x0101010101010101;
 }
 
+/**
+ * CPU SIMD integer type vector
+ * 
+ * If a whole row can fit in the specified integer type, simply rotate every row
+ * one cell to the east or west to the get the west and east neighbors, 
+ * respectively.
+ * 
+ * The _e in the function name stands for equal (width == size of integer).
+ */
 template <class T> 
-static inline void calculate_row_eq_simd_int(char* board, char* buf, int width, 
+static inline void simulate_row_simd_int_e(char* board, char* buf, int width, 
     int height, int y, int ynorth, int ysouth)
 {
     int vec_len = sizeof(T);
@@ -256,8 +284,19 @@ static inline void calculate_row_eq_simd_int(char* board, char* buf, int width,
     *(T*)(buf + irow) = cells;
 }
 
+/**
+ * CPU SIMD integer type vector
+ * 
+ * If the width of the board is larger than the size of the specified integer 
+ * type, the first and last vectors of each row must be handled separately since
+ * their west and east neighbors, respectively, wrap around. The middle integers 
+ * simply load the addresses offset by one in both directions to access the west
+ * and east neighbors.
+ * 
+ * The _g in the function name stands for greater (width > size of integer).
+ */
 template <class T> 
-static inline void calculate_row_gt_simd_int(char* board, char* buf, int width, 
+static inline void simulate_row_simd_int_g(char* board, char* buf, int width, 
     int height, int y, int ynorth, int ysouth)
 {
     int vec_len = sizeof(T);
@@ -286,8 +325,7 @@ static inline void calculate_row_gt_simd_int(char* board, char* buf, int width,
     cells = alive_simd_int<T>(cells, r_cells);
     *(T*)(buf + irow) = cells;
 
-    /* Middle vectors simply perform unaligned memory accesses to get their east
-    and west neighbors. */
+    // Middle vectors
     for (int x = vec_len; x < width - vec_len; x += vec_len) {
         int ieast = x + 1;
         int iwest = x - 1;
@@ -323,6 +361,26 @@ static inline void calculate_row_gt_simd_int(char* board, char* buf, int width,
     *(T*)(buf + irow + width - vec_len) = cells;
 }
 
+/**
+ * CPU SIMD integer type vector
+ * 
+ * Simulator which processes n cells simultaneously, where n is the size of the
+ * integer type specified in the template argument T. This is required because
+ * vector intrinsics do not exist for vectors smaller than 64 bits. This does 
+ * not execute actual SIMD instructions but rather, it uses hacky operations
+ * described below:
+ * 
+ * 1. Pointer to a cell in board is reinterpreted and dereferenced as a larger
+ *   integer type in order to group multiple cells into a single integer.
+ * 2. The integers that represent the neighbors are added together. This is okay
+ *   because the maximum sum for every byte is 8, therefore, the sum of one cell
+ *   will never produce a carry out that would contaminate the sum of the cell
+ *   next to it.
+ * 3. Bitwise operations are performed to determine the next state of the cells
+ *   in the resulting integer from step 2.
+ * 4. The resulting integer from the step 3 is stored to the output buffer 
+ *   reinterpreted as a pointer to the larger integer type from before.
+ */
 template <class T>
 static void game_of_life_cpu_simd_int(char* board, int width, int height, 
     int gens)
@@ -334,34 +392,35 @@ static void game_of_life_cpu_simd_int(char* board, int width, int height,
     int size = width * height;
     char* buf = new char[size];
 
-    /* Special case if the width is equal to the length of the integer type 
-    because the row is simply rotated to get the east and west neighbors */
+    /* Boards with the same width as the size of the specified integer type T 
+    are handled separately because they can be optimized even further. See 
+    simulate_row_simd_int_e(). */
     if (width == vec_len) {
         for (int i = 0; i < gens; ++i) {
-            calculate_row_eq_simd_int<T>(board, buf, width, height, 0, 
+            simulate_row_simd_int_e<T>(board, buf, width, height, 0, 
                 height - 1, 1);
             
             for (int y = 1; y < height - 1; ++y) {
-                calculate_row_eq_simd_int<T>(board, buf, width, height, y, 
-                    y - 1, y + 1);
+                simulate_row_simd_int_e<T>(board, buf, width, height, y, y - 1, 
+                    y + 1);
             }
 
-            calculate_row_eq_simd_int<T>(board, buf, width, height, height - 1,
+            simulate_row_simd_int_e<T>(board, buf, width, height, height - 1,
                 height - 2, 0);
             swap_ptr(char*, board, buf);
         }
     }
     else {
         for (int i = 0; i < gens; ++i) {
-            calculate_row_gt_simd_int<T>(board, buf, width, height, 0, 
+            simulate_row_simd_int_g<T>(board, buf, width, height, 0, 
                 height - 1, 1);
 
             for (int y = 1; y < height - 1; ++y) {
-                calculate_row_gt_simd_int<T>(board, buf, width, height, y, 
+                simulate_row_simd_int_g<T>(board, buf, width, height, y, 
                     y - 1, y + 1);
             }
 
-            calculate_row_gt_simd_int<T>(board, buf, width, height, height - 1,
+            simulate_row_simd_int_g<T>(board, buf, width, height, height - 1,
                 height - 2, 0);
             swap_ptr(char*, board, buf);
         }
@@ -375,8 +434,10 @@ static void game_of_life_cpu_simd_int(char* board, int width, int height,
 }
 
 /**
- * Single thread implementation which processes multiple cells as a vector in
- * every iteration.
+ * Game of Life CPU SIMD
+ * 
+ * Different width ranges are handled separately to maximize vector size for 
+ * maximum parallelism without overrunning a row (vector size > width).
  */ 
 void game_of_life_cpu_simd(char* board, int width, int height, int gens)
 {

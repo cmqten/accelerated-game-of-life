@@ -1,13 +1,17 @@
-#include <cstdlib>
+/**
+ * Game of Life CPU Sequential
+ * 
+ * Optimized sequential CPU implementation of a Game of Life simulator.
+ */
 #include <cstring>
 #include "simulators.hpp"
 #include "util.hpp"
 
 /**
- * Calculates the states of the cells in the next generation for the specified 
- * row. The input is board and the output is buf. 
+ * Simulates the cells in row y for one generation. The input is board and the 
+ * output is buf. 
  */
-static inline void calculate_row(char* board, char* buf, int width, int height, 
+static inline void simulate_row(char* board, char* buf, int width, int height, 
     int y, int ynorth, int ysouth)
 {
     int irow = y * width;
@@ -53,9 +57,6 @@ static inline void calculate_row(char* board, char* buf, int width, int height,
     buf[idx] = cell;
 }
 
-/**
- * CPU sequential implementation.
- */ 
 void game_of_life_cpu_sequential(char* board, int width, int height, int gens)
 {
     int size = width * height;
@@ -63,15 +64,14 @@ void game_of_life_cpu_sequential(char* board, int width, int height, int gens)
     
     for (int i = 0; i < gens; ++i) {
         // First row is a special case because the north neighbors wrap around.
-        calculate_row(board, buf, width, height, 0, height - 1, 1);
+        simulate_row(board, buf, width, height, 0, height - 1, 1);
 
-        /* Middle rows are handled as expected, north and south rows are one 
-        less and one more, respectively. */
-        for (int y = 1; y < height - 1; ++y) 
-            calculate_row(board, buf, width, height, y, y - 1, y + 1);
+        // Middle rows
+        for (int y = 1; y < height - 1; ++y)
+            simulate_row(board, buf, width, height, y, y - 1, y + 1);
 
         // Last row is a special case because the south neighbors wrap around.
-        calculate_row(board, buf, width, height, height - 1, height - 2, 0);
+        simulate_row(board, buf, width, height, height - 1, height - 2, 0);
         swap_ptr(char*, board, buf);
     }
 
