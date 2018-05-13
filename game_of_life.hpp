@@ -45,8 +45,6 @@ private:
     explicit game_of_life(char* board, int width, int height, 
         std::function<void(char*, int, int, int)> simulator);
     
-    explicit game_of_life(const game_of_life& other);
-    
     char* board;
 
 public:
@@ -91,13 +89,13 @@ public:
      * instance of game_of_life. Throws an invalid_argument if the buffer is 
      * null or the dimensions are out of range.
      */
-    static game_of_life* create_from_buffer(char* buf, int width, int height,
+    static game_of_life create_from_buffer(char* buf, int width, int height,
         std::function<void(char*, int, int, int)> simulator = nullptr);
     
     /**
      * Creates a copy of an existing game_of_life instance.
      */
-    static game_of_life* create_from_existing(game_of_life* other);
+    static game_of_life create_from_existing(const game_of_life& other);
     
     /**
      * Loads a board from a plain pbm file. Throws runtime_error if the file 
@@ -105,7 +103,7 @@ public:
      * overflow the long datatype, or out_of_range if the dimensions are out
      * of the min and max ranges specified above.
      */
-    static game_of_life* create_from_file(const std::string& filename,
+    static game_of_life create_from_file(const std::string& filename,
         std::function<void(char*, int, int, int)> simulator = nullptr);
     
     /**
@@ -113,7 +111,7 @@ public:
      * percentage. Throws an invalid_argument if any of the width, height, or 
      * percent are out of range.
      */
-    static game_of_life* create_random(int width, int height, int percent,
+    static game_of_life create_random(int width, int height, int percent,
         std::function<void(char*, int, int, int)> simulator = nullptr);
 };
 
