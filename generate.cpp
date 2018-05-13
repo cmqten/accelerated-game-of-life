@@ -25,8 +25,7 @@ int main(int argc, char** argv)
     int percent = strtol(argv[3], NULL, 10);
     throw_non_zero<std::overflow_error>(errno, "percent overflow/underflow");
 
-    game_of_life* board1 = game_of_life::create_random(width, height, percent);
-    board1->save(argv[4]); // implicit conversion from char[] to string
-    delete board1;
+    game_of_life gol = game_of_life::create_random(width, height, percent);
+    gol.save(argv[4]); // implicit conversion from char[] to string
     return 0;
 }
