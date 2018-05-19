@@ -20,7 +20,6 @@
 #include <fstream>
 #include <iostream>
 #include "game_of_life.hpp"
-#include "simulators.hpp"
 
 /* A copy of buf is made to ensure that the grid is allocated correctly (using
  * new) since grid is deallocated using delete[] in the destructor of 

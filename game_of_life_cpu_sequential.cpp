@@ -7,7 +7,7 @@
  * Created on: May 5, 2018
  */
 #include <cstring>
-#include "simulators.hpp"
+#include "game_of_life_sim.hpp"
 #include "util.hpp"
 
 /* Simulates the cells in row y for one generation. The input is grid and the 

@@ -1,6 +1,6 @@
 #include <iostream>
 #include "game_of_life.hpp"
-#include "simulators.hpp"
+#include "game_of_life_sim.hpp"
 
 int main(int argc, char** argv)
 {

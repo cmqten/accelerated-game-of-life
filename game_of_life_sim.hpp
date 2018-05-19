@@ -1,5 +1,5 @@
 /**
- * simulators.hpp
+ * game_of_life_sim.hpp
  * 
  * Different implementations of Conway's Game of Life.
  * 
@@ -8,8 +8,6 @@
  */
 #ifndef __GAME_OF_LIFE_SIM_HPP__
 #define __GAME_OF_LIFE_SIM_HPP__
-
-#include <stdint.h>
 
 void game_of_life_cpu_sequential(char* grid, int width, int height, int gens);
 
