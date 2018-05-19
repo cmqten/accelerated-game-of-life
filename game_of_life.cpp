@@ -126,7 +126,7 @@ char* game_of_life::get_grid() const
     return grid_copy;
 }
 
-void game_of_life::save(const std::string& filename) const
+void game_of_life::save_grid(const std::string& filename) const
 {
     std::ofstream file;
     file.open(filename);

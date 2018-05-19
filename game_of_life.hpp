@@ -88,7 +88,7 @@ public:
 
     /* Saves the grid as the specified filename. Throws a runtime_error if the
      * file cannot be opened for writing. */
-    void save(const std::string& filename) const;
+    void save_grid(const std::string& filename) const;
 
     /* Simulates the game of life grid for the specified number of generations
      * and returns the simulation time in seconds. Does nothing and returns -1.0

@@ -31,6 +31,6 @@ int main(int argc, char** argv)
     throw_non_zero<std::overflow_error>(errno, "percent overflow/underflow");
 
     game_of_life gol = game_of_life::create_random(width, height, percent);
-    gol.save(argv[4]); // implicit conversion from char[] to string
+    gol.save_grid(argv[4]); // implicit conversion from char[] to string
     return 0;
 }
