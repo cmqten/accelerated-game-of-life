@@ -1,5 +1,10 @@
 /**
+ * util.hpp
+ * 
  * Various utility macros, functions, variables.
+ * 
+ * Author: Carl Marquez
+ * Created on: April 21, 2018
  */
 #ifndef __UTIL_HPP__
 #define __UTIL_HPP__

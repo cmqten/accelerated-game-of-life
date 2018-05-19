@@ -1,3 +1,20 @@
+/**
+ * game_of_life.cpp
+ * 
+ * Conway's Game of Life implementation using C++ using various techniques to
+ * optimize for performance. Game of Life is a life simulation which simulates
+ * a grid of cells. In every generation, each cell can be alive or dead, and the
+ * state of each cell in the next generation is determined by the following 
+ * rules:
+ * 
+ * 1. A living cell with less than two neighbors dies due to loneliness.
+ * 2. A living cell with more than three neighbors dies due to overpopulation.
+ * 3. A living cell with two or three neighbors survives.
+ * 4. A dead cell with three neighbors becomes alive due to reproduction.
+ * 
+ * Author: Carl Marquez
+ * Created on: April 21, 2018
+ */
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
@@ -5,39 +22,33 @@
 #include "game_of_life.hpp"
 #include "simulators.hpp"
 
-/**
- * A copy of buf is made to ensure that the board is allocated correctly (using
- * new) since board is deallocated using delete[] in the destructor of 
- * game_of_life.
- */
+/* A copy of buf is made to ensure that the grid is allocated correctly (using
+ * new) since grid is deallocated using delete[] in the destructor of 
+ * game_of_life. */
 game_of_life game_of_life::create_from_buffer(char* buf, int width, int height,
     std::function<void(char*, int, int, int)> simulator)
 {
-    throw_board_null<std::invalid_argument>(buf);
+    throw_grid_null<std::invalid_argument>(buf);
     throw_width_out_of_range<std::invalid_argument>(width);
     throw_height_out_of_range<std::invalid_argument>(height);
 
     int size = width * height;
-    char* board = new char[size];
-    memcpy(board, buf, size);
-    return game_of_life(board, width, height, simulator);
+    char* grid = new char[size];
+    memcpy(grid, buf, size);
+    return game_of_life(grid, width, height, simulator);
 }
 
-/**
- * Copies an existing instance of game_of_life. Use this instead of the copy
+/* Copies an existing instance of game_of_life. Use this instead of the copy
  * constructor because the copy constructor does not make a new copy of the 
- * board.
- */
+ * grid. */
 game_of_life game_of_life::create_from_existing(const game_of_life& other) 
 {
-    return game_of_life::create_from_buffer(other.board, other.width, 
+    return game_of_life::create_from_buffer(other.grid, other.width, 
         other.height, other.simulator);
 }
 
-/**
- * The file must be a plain pbm file with the specified format in the header
- * file game_of_life.hpp.
- */
+/* The file must be a plain pbm file with the specified format in the header
+ * file game_of_life.hpp. */
 game_of_life game_of_life::create_from_file(const std::string& filename,
     std::function<void(char*, int, int, int)> simulator) 
 {
@@ -61,13 +72,13 @@ game_of_life game_of_life::create_from_file(const std::string& filename,
     throw_non_zero<std::overflow_error>(errno, "height overflow/underflow");
     throw_height_out_of_range<std::out_of_range>(height);
 
-    // The third line is a string of '0' and '1' that represents the board
+    // The third line is a string of '0' and '1' that represents the grid
     int size = width * height;
-    char* board = new char[size];
-    file.read(board, size);   
+    char* grid = new char[size];
+    file.read(grid, size);   
     file.close();
-    for (int i = 0; i < size; ++i) board[i] -= '0'; // ascii to int
-    return game_of_life(board, width, height, simulator);
+    for (int i = 0; i < size; ++i) grid[i] -= '0'; // ascii to int
+    return game_of_life(grid, width, height, simulator);
 }
 
 game_of_life game_of_life::create_random(int width, int height, int percent,
@@ -79,28 +90,28 @@ game_of_life game_of_life::create_random(int width, int height, int percent,
         "percent out of range of 1 and 100");
 
     int size = width * height;
-    char* board = new char[size];
+    char* grid = new char[size];
     srand(time(nullptr));
-    for (int i = 0; i < size; ++i) board[i] = ((rand() % 100) < percent);
-    return game_of_life(board, width, height, simulator);
+    for (int i = 0; i < size; ++i) grid[i] = ((rand() % 100) < percent);
+    return game_of_life(grid, width, height, simulator);
 }
 
-game_of_life::game_of_life(char* board, int width, int height,
+game_of_life::game_of_life(char* grid, int width, int height,
     std::function<void(char*, int, int, int)> simulator) : 
-    board(board), width(width), height(height), size(width * height),
+    grid(grid), width(width), height(height), size(width * height),
     simulator(simulator)
 { 
 }
 
 game_of_life::~game_of_life() 
 {
-    delete[] board;
+    delete[] grid;
 }
 
 bool game_of_life::operator==(const game_of_life& other) const
 {
     return width == other.width && height == other.height && size == other.size
-        && !memcmp(board, other.board, size);
+        && !memcmp(grid, other.grid, size);
 }
 
 bool game_of_life::operator!=(const game_of_life& other) const
@@ -108,11 +119,11 @@ bool game_of_life::operator!=(const game_of_life& other) const
     return !operator==(other);
 }
 
-char* game_of_life::get_board()
+char* game_of_life::get_grid() const
 {
-    char* board_copy = new char[size];
-    memcpy(board_copy, board, size);
-    return board_copy;
+    char* grid_copy = new char[size];
+    memcpy(grid_copy, grid, size);
+    return grid_copy;
 }
 
 void game_of_life::save(const std::string& filename) const
@@ -122,7 +133,7 @@ void game_of_life::save(const std::string& filename) const
     throw_true<std::runtime_error>(!file, "file cannot be opened for writing");
 
     char* buf = new char[size];
-    memcpy(buf, board, size); // Don't want to modify the original board
+    memcpy(buf, grid, size); // Don't want to modify the original grid
     for (int i = 0; i < size; ++i) buf[i] += '0';
 
     file << "P1\n" << width << " " << height << std::endl;
@@ -136,6 +147,6 @@ double game_of_life::simulate(int gens)
     if (simulator == nullptr) return -1.0;
     my_timer timer;
     timer.start();
-    simulator(board, width, height, gens);
+    simulator(grid, width, height, gens);
     return timer.stop();
 }

@@ -1,7 +1,7 @@
 CXX = g++
 CXX_FLAGS = -std=c++17 -Wall -msse2 -mssse3
 LD_FLAGS = 
-OPT = -O2
+OPT = -O2 -funroll-loops -funswitch-loops
 
 EXE = generate simulate
 OBJ = game_of_life.o game_of_life_cpu_sequential.o game_of_life_cpu_simd.o

@@ -1,6 +1,11 @@
 /**
- * Generates a random game of life board according to the specified population
- * percentage and size and saves it as a pbm file.
+ * generate.cpp
+ * 
+ * Generates a random Game of Life grid according to the specified population
+ * percentage and size then saves it as a pbm file.
+ * 
+ * Author: Carl Marquez
+ * Created on: April 13, 2018
  */
 #include <cstring>
 #include <fstream>
