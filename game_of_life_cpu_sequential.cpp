@@ -10,10 +10,8 @@
 #include "simulators.hpp"
 #include "util.hpp"
 
-/**
- * Simulates the cells in row y for one generation. The input is grid and the 
- * output is buf. 
- */
+/* Simulates the cells in row y for one generation. The input is grid and the 
+ * output is buf. */
 static inline void simulate_row(char* grid, char* buf, int width, int height, 
     int y, int ynorth, int ysouth)
 {
