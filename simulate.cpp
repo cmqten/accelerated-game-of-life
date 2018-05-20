@@ -1,14 +1,14 @@
 #include <iostream>
-#include "game_of_life.hpp"
-#include "game_of_life_sim.hpp"
+#include "cell_world.hpp"
+#include "sim.hpp"
 
 int main(int argc, char** argv)
 {
     int gens = 1000;
-    game_of_life gol_seq = game_of_life::create_random(1024, 1024, 50,
-        game_of_life_cpu_sequential);
-    game_of_life gol_simd = game_of_life::create_from_existing(gol_seq);
-    gol_simd.simulator = game_of_life_cpu_simd;
+    cell_world gol_seq = cell_world::create_random(1024, 1024, 50,
+        sim_cpu_sequential);
+    cell_world gol_simd = cell_world::create_from_existing(gol_seq);
+    gol_simd.simulator = sim_cpu_simd;
 
     std::cout << "CPU sequential: " << gol_seq.simulate(gens) << " seconds" 
               << std::endl;

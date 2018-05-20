@@ -4,7 +4,7 @@ LD_FLAGS =
 OPT = -O2 -funroll-loops -funswitch-loops
 
 EXE = generate simulate
-OBJ = game_of_life.o game_of_life_cpu_sequential.o game_of_life_cpu_simd.o
+OBJ = cell_world.o sim_cpu_sequential.o sim_cpu_simd.o
 
 all: $(EXE)
 

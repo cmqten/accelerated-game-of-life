@@ -1,5 +1,5 @@
 /**
- * game_of_life.cpp
+ * cell_world.cpp
  * 
  * Conway's Game of Life implementation using C++ using various techniques to
  * optimize for performance. Game of Life is a life simulation which simulates
@@ -12,6 +12,8 @@
  * 3. A living cell with two or three neighbors survives.
  * 4. A dead cell with three neighbors becomes alive due to reproduction.
  * 
+ * Formerly called game_of_life.cpp
+ * 
  * Author: Carl Marquez
  * Created on: April 21, 2018
  */
@@ -19,12 +21,12 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
-#include "game_of_life.hpp"
+#include "cell_world.hpp"
 
 /* A copy of buf is made to ensure that the grid is allocated correctly (using
  * new) since grid is deallocated using delete[] in the destructor of 
- * game_of_life. */
-game_of_life game_of_life::create_from_buffer(char* buf, int width, int height,
+ * cell_world. */
+cell_world cell_world::create_from_buffer(char* buf, int width, int height,
     std::function<void(char*, int, int, int)> simulator)
 {
     throw_grid_null<std::invalid_argument>(buf);
@@ -34,21 +36,21 @@ game_of_life game_of_life::create_from_buffer(char* buf, int width, int height,
     int size = width * height;
     char* grid = new char[size];
     memcpy(grid, buf, size);
-    return game_of_life(grid, width, height, simulator);
+    return cell_world(grid, width, height, simulator);
 }
 
-/* Copies an existing instance of game_of_life. Use this instead of the copy
+/* Copies an existing instance of cell_world. Use this instead of the copy
  * constructor because the copy constructor does not make a new copy of the 
  * grid. */
-game_of_life game_of_life::create_from_existing(const game_of_life& other) 
+cell_world cell_world::create_from_existing(const cell_world& other) 
 {
-    return game_of_life::create_from_buffer(other.grid, other.width, 
-        other.height, other.simulator);
+    return cell_world::create_from_buffer(other.grid, other.width, other.height,
+        other.simulator);
 }
 
 /* The file must be a plain pbm file with the specified format in the header
- * file game_of_life.hpp. */
-game_of_life game_of_life::create_from_file(const std::string& filename,
+ * file cell_world.hpp. */
+cell_world cell_world::create_from_file(const std::string& filename,
     std::function<void(char*, int, int, int)> simulator) 
 {
     std::ifstream file;
@@ -77,10 +79,10 @@ game_of_life game_of_life::create_from_file(const std::string& filename,
     file.read(grid, size);   
     file.close();
     for (int i = 0; i < size; ++i) grid[i] -= '0'; // ascii to int
-    return game_of_life(grid, width, height, simulator);
+    return cell_world(grid, width, height, simulator);
 }
 
-game_of_life game_of_life::create_random(int width, int height, int percent,
+cell_world cell_world::create_random(int width, int height, int percent,
     std::function<void(char*, int, int, int)> simulator)
 {
     throw_width_out_of_range<std::invalid_argument>(width);
@@ -92,40 +94,40 @@ game_of_life game_of_life::create_random(int width, int height, int percent,
     char* grid = new char[size];
     srand(time(nullptr));
     for (int i = 0; i < size; ++i) grid[i] = ((rand() % 100) < percent);
-    return game_of_life(grid, width, height, simulator);
+    return cell_world(grid, width, height, simulator);
 }
 
-game_of_life::game_of_life(char* grid, int width, int height,
+cell_world::cell_world(char* grid, int width, int height,
     std::function<void(char*, int, int, int)> simulator) : 
     grid(grid), width(width), height(height), size(width * height),
     simulator(simulator)
 { 
 }
 
-game_of_life::~game_of_life() 
+cell_world::~cell_world() 
 {
     delete[] grid;
 }
 
-bool game_of_life::operator==(const game_of_life& other) const
+bool cell_world::operator==(const cell_world& other) const
 {
     return width == other.width && height == other.height && size == other.size
         && !memcmp(grid, other.grid, size);
 }
 
-bool game_of_life::operator!=(const game_of_life& other) const
+bool cell_world::operator!=(const cell_world& other) const
 {
     return !operator==(other);
 }
 
-char* game_of_life::get_grid() const
+char* cell_world::get_grid() const
 {
     char* grid_copy = new char[size];
     memcpy(grid_copy, grid, size);
     return grid_copy;
 }
 
-void game_of_life::save_grid(const std::string& filename) const
+void cell_world::save_grid(const std::string& filename) const
 {
     std::ofstream file;
     file.open(filename);
@@ -141,7 +143,7 @@ void game_of_life::save_grid(const std::string& filename) const
     delete[] buf;
 }
 
-double game_of_life::simulate(int gens)
+double cell_world::simulate(int gens)
 {
     if (simulator == nullptr) return -1.0;
     my_timer timer;

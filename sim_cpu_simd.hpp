@@ -1,5 +1,5 @@
 /**
- * game_of_life_cpu_simd.hppp
+ * sim_cpu_simd.hppp
  * 
  * Optimized data parallel implementation of Conway's Game of Life using SIMD 
  * operations. Uses SSE2 and SSSE3 extensions.
@@ -9,15 +9,17 @@
  * only guaranteed to work on an x86_64 system with the extensions specified 
  * above.
  * 
+ * Formerly called game_of_life_cpu_simd.hpp.
+ * 
  * Author: Carl Marquez
  * Created on: May 19, 2018
  */
-#ifndef __GAME_OF_LIFE_CPU_SIMD_HPP__
-#define __GAME_OF_LIFE_CPU_SIMD_HPP__
+#ifndef __SIM_CPU_SIMD_HPP__
+#define __SIM_CPU_SIMD_HPP__
 
 #include <cstring>
 #include <x86intrin.h>
-#include "game_of_life_sim.hpp"
+#include "sim.hpp"
 #include "util.hpp"
 
 
@@ -39,7 +41,7 @@ inline void simulate_row_simd_16_e(char* grid, char* buf, int width, int height,
 inline void simulate_row_simd_16_g(char* grid, char* buf, int width, int height,
     int y, int ynorth, int ysouth);
 
-void game_of_life_cpu_simd_16(char* grid, int width, int height, int gens);
+void sim_cpu_simd_16(char* grid, int width, int height, int gens);
 
 
 /*******************************************************************************
@@ -176,7 +178,7 @@ inline void simulate_row_simd_int_g(char* grid, char* buf, int width,
 }
 
 template <class T>
-void game_of_life_cpu_simd_int(char* grid, int width, int height, int gens)
+void sim_cpu_simd_int(char* grid, int width, int height, int gens)
 {
     int vec_len = sizeof(T);
     throw_false<std::invalid_argument>(width >= vec_len, "width of the grid "

@@ -1,5 +1,5 @@
 /**
- * game_of_life.hpp
+ * cell_world.hpp
  * 
  * Conway's Game of Life implementation using C++ using various techniques to
  * optimize for performance. Game of Life is a life simulation which simulates
@@ -46,11 +46,13 @@
  * 
  * The simulation result must be in the same buffer as the one in the arguments.
  * 
+ * Formerly called game_of_life.hpp.
+ * 
  * Author: Carl Marquez
  * Created on: April 21, 2018
  */
-#ifndef __GAME_OF_LIFE_HPP__
-#define __GAME_OF_LIFE_HPP__
+#ifndef __CELL_WORLD_HPP__
+#define __CELL_WORLD_HPP__
 
 #include <functional>
 #include <string>
@@ -63,10 +65,10 @@ const int max_width = 16384;
 const int min_height = 3;
 const int max_height = 16384;
 
-class game_of_life 
+class cell_world 
 {
 private:
-    explicit game_of_life(char* grid, int width, int height, 
+    explicit cell_world(char* grid, int width, int height, 
         std::function<void(char*, int, int, int)> simulator);
     
     char* grid;
@@ -77,11 +79,11 @@ public:
     const int size;
     std::function<void(char*, int, int, int)> simulator;
 
-    ~game_of_life();
+    ~cell_world();
 
-    bool operator==(const game_of_life& other) const;
+    bool operator==(const cell_world& other) const;
 
-    bool operator!=(const game_of_life& other) const;
+    bool operator!=(const cell_world& other) const;
     
     /* Returns copy of grid. Free using delete[]. */
     char* get_grid() const; 
@@ -97,25 +99,25 @@ public:
 
     /* Creates a grid from a pre-existing buffer of 0 and 1 integers. The 
      * buffer is copied so it can be safely freed outside the context of the 
-     * instance of game_of_life. Throws an invalid_argument if the buffer is 
+     * instance of cell_world. Throws an invalid_argument if the buffer is 
      * null or the dimensions are out of range. */
-    static game_of_life create_from_buffer(char* buf, int width, int height,
+    static cell_world create_from_buffer(char* buf, int width, int height,
         std::function<void(char*, int, int, int)> simulator = nullptr);
     
-    /* Creates a copy of an existing game_of_life instance. */
-    static game_of_life create_from_existing(const game_of_life& other);
+    /* Creates a copy of an existing cell_world instance. */
+    static cell_world create_from_existing(const cell_world& other);
     
     /* Loads a grid from a plain pbm file. Throws runtime_error if the file 
      * cannot be opened or is not a pbm file, overflow error if the dimensions
      * overflow the long datatype, or out_of_range if the dimensions are out
      * of the min and max ranges specified above. */
-    static game_of_life create_from_file(const std::string& filename,
+    static cell_world create_from_file(const std::string& filename,
         std::function<void(char*, int, int, int)> simulator = nullptr);
     
     /* Generates a random grid of the specified width, height, and population
      * percentage. Throws an invalid_argument if any of the width, height, or 
      * percent are out of range. */
-    static game_of_life create_random(int width, int height, int percent,
+    static cell_world create_random(int width, int height, int percent,
         std::function<void(char*, int, int, int)> simulator = nullptr);
 };
 
