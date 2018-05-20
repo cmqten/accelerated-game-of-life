@@ -23,7 +23,7 @@
 /* CPU SIMD 128-bit vector SSE2/SSSE3
  *
  * Calculates the next states of 16 cells in a vector. */
-inline __m128i alive_simd_16(__m128i count, __m128i state)
+inline __m128i cpu_simd_16_alive(__m128i count, __m128i state)
 {
     return _mm_and_si128(
         _mm_or_si128(
@@ -40,7 +40,7 @@ inline __m128i alive_simd_16(__m128i count, __m128i state)
  * to the east or west to the get the west and east neighbors, respectively.
  * 
  * The _e in the function name stands for equal (width == size of vector). */
-inline void simulate_row_simd_16_e(char* grid, char* buf, int width, int height, 
+inline void cpu_simd_16_row_e(char* grid, char* buf, int width, int height, 
     int y, int ynorth, int ysouth)
 {
     int irow = y * width;
@@ -68,7 +68,7 @@ inline void simulate_row_simd_16_e(char* grid, char* buf, int width, int height,
     __m128i sw_cells = _mm_alignr_epi8(s_cells, s_cells, 15);
     cells = _mm_add_epi8(cells, sw_cells);
 
-    cells = alive_simd_16(cells, r_cells);
+    cells = cpu_simd_16_alive(cells, r_cells);
     _mm_store_si128((__m128i*)(buf + irow), cells);
 }
 
@@ -80,7 +80,7 @@ inline void simulate_row_simd_16_e(char* grid, char* buf, int width, int height,
  * offset by one in both directions to access the west and east neighbors.
  * 
  * The _g in the function name stands for greater (width > size of vector). */
-inline void simulate_row_simd_16_g(char* grid, char* buf, int width, int height,
+inline void cpu_simd_16_row_g(char* grid, char* buf, int width, int height,
     int y, int ynorth, int ysouth)
 {
     int irow = y * width;
@@ -122,7 +122,7 @@ inline void simulate_row_simd_16_g(char* grid, char* buf, int width, int height,
     ((char*)&sw_cells)[0] = *(rsouth + width - 1);
     cells = _mm_add_epi8(cells, sw_cells);
 
-    cells = alive_simd_16(cells, r_cells);
+    cells = cpu_simd_16_alive(cells, r_cells);
     _mm_storeu_si128((__m128i*)(buf + irow), cells);
 
     // Middle vectors
@@ -151,7 +151,7 @@ inline void simulate_row_simd_16_g(char* grid, char* buf, int width, int height,
         cells = _mm_add_epi8(cells, se_cells);
 
         r_cells = _mm_loadu_si128((__m128i*)(row + x));
-        cells = alive_simd_16(cells, r_cells);
+        cells = cpu_simd_16_alive(cells, r_cells);
         _mm_storeu_si128((__m128i*)(buf + irow + x), cells);
     }
 
@@ -184,7 +184,7 @@ inline void simulate_row_simd_16_g(char* grid, char* buf, int width, int height,
     ((char*)&se_cells)[15] = *rsouth;
     cells = _mm_add_epi8(cells, se_cells);
 
-    cells = alive_simd_16(cells, r_cells);
+    cells = cpu_simd_16_alive(cells, r_cells);
     _mm_storeu_si128((__m128i*)(buf + irow + width - 16), cells);
 }
 
@@ -200,30 +200,30 @@ void sim_cpu_simd_16(char* grid, int width, int height, int gens)
     char* buf = new char[size];
 
     /* Grids with width of 16 are handled separately because they can be 
-    optimized even further. See simulate_row_simd_16_e(). */
+    optimized even further. See cpu_simd_16_row_e(). */
     if (width == 16) {
         for (int i = 0; i < gens; ++i) {
             // First row
-            simulate_row_simd_16_e(grid, buf, width, height, 0, height - 1, 1);
+            cpu_simd_16_row_e(grid, buf, width, height, 0, height - 1, 1);
 
             for (int y = 1; y < height - 1; ++y) // Middle rows
-                simulate_row_simd_16_e(grid, buf, width, height, y, y-1, y+1);
+                cpu_simd_16_row_e(grid, buf, width, height, y, y - 1, y + 1);
 
-            simulate_row_simd_16_e(grid, buf, width, height, height - 1, 
-                height - 2, 0); // Last row
+            // Last row
+            cpu_simd_16_row_e(grid, buf, width, height, height-1, height-2, 0); 
             swap_ptr(char*, grid, buf);
         }
     }
     else {
         for (int i = 0; i < gens; ++i) {
             // First row
-            simulate_row_simd_16_g(grid, buf, width, height, 0, height - 1, 1);
+            cpu_simd_16_row_g(grid, buf, width, height, 0, height - 1, 1);
 
             for (int y = 1; y < height - 1; ++y) // Middle rows
-                simulate_row_simd_16_g(grid, buf, width, height, y, y-1, y+1);
-
-            simulate_row_simd_16_g(grid, buf, width, height, height - 1,
-                height - 2, 0); // Last row
+                cpu_simd_16_row_g(grid, buf, width, height, y, y - 1, y + 1);
+            
+            // Last row
+            cpu_simd_16_row_g(grid, buf, width, height, height-1, height-2, 0); 
             swap_ptr(char*, grid, buf);
         }
     }

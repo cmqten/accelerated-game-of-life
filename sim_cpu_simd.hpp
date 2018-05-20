@@ -31,14 +31,14 @@
  ******************************************************************************/
 
 /* Calculates the next states of 16 cells in a vector. */
-inline __m128i alive_simd_16(__m128i count, __m128i state);
+inline __m128i cpu_simd_16_alive(__m128i count, __m128i state);
 
 /* Simulates a row of cells if the width of the grid is exactly 16. */
-inline void simulate_row_simd_16_e(char* grid, char* buf, int width, int height, 
+inline void cpu_simd_16_row_e(char* grid, char* buf, int width, int height, 
     int y, int ynorth, int ysouth);
 
 /* Simulates a row of cells if the width of the grid is greater than 16. */
-inline void simulate_row_simd_16_g(char* grid, char* buf, int width, int height,
+inline void cpu_simd_16_row_g(char* grid, char* buf, int width, int height,
     int y, int ynorth, int ysouth);
 
 void sim_cpu_simd_16(char* grid, int width, int height, int gens);
@@ -70,7 +70,7 @@ void sim_cpu_simd_16(char* grid, int width, int height, int gens);
  * assumption that each byte in count is between 0 and 8, and each byte in state
  * is either a 0 or 1. */
 template <class T>
-inline T alive_simd_int(T count, T state)
+inline T cpu_simd_int_alive(T count, T state)
 {
     return (state | count) & (count >> 1) & ~(count >> 2) & ~(count >> 3) &
         (T)0x0101010101010101;
@@ -82,8 +82,8 @@ inline T alive_simd_int(T count, T state)
  * 
  * The _e in the function name stands for equal (width == size of integer). */
 template <class T> 
-inline void simulate_row_simd_int_e(char* grid, char* buf, int width, 
-    int height, int y, int ynorth, int ysouth)
+inline void cpu_simd_int_row_e(char* grid, char* buf, int width, int height, 
+    int y, int ynorth, int ysouth)
 {
     int vec_len = sizeof(T);
     int irow = y * width;
@@ -101,7 +101,7 @@ inline void simulate_row_simd_int_e(char* grid, char* buf, int width,
     T se_cells = (s_cells >> 8) | (s_cells << ((vec_len - 1) * 8));
     T cells = n_cells + nw_cells + ne_cells + w_cells + e_cells + s_cells + 
               sw_cells + se_cells;
-    cells = alive_simd_int<T>(cells, r_cells);
+    cells = cpu_simd_int_alive<T>(cells, r_cells);
     *(T*)(buf + irow) = cells;
 }
 
@@ -113,8 +113,8 @@ inline void simulate_row_simd_int_e(char* grid, char* buf, int width,
  * 
  * The _g in the function name stands for greater (width > size of integer). */
 template <class T> 
-inline void simulate_row_simd_int_g(char* grid, char* buf, int width, 
-    int height, int y, int ynorth, int ysouth)
+inline void cpu_simd_int_row_g(char* grid, char* buf, int width, int height, 
+    int y, int ynorth, int ysouth)
 {
     int vec_len = sizeof(T);
     int irow = y * width;
@@ -138,7 +138,7 @@ inline void simulate_row_simd_int_g(char* grid, char* buf, int width,
     T se_cells = *(T*)(rsouth + 1);
     T cells = n_cells + nw_cells + ne_cells + w_cells + e_cells + s_cells + 
               sw_cells + se_cells;
-    cells = alive_simd_int<T>(cells, r_cells);
+    cells = cpu_simd_int_alive<T>(cells, r_cells);
     *(T*)(buf + irow) = cells;
 
     // Middle vectors
@@ -156,7 +156,7 @@ inline void simulate_row_simd_int_g(char* grid, char* buf, int width,
         se_cells = *(T*)(rsouth + ieast);
         cells = n_cells + nw_cells + ne_cells + w_cells + e_cells + s_cells + 
                 sw_cells + se_cells;
-        cells = alive_simd_int<T>(cells, *(T*)(row + x));
+        cells = cpu_simd_int_alive<T>(cells, *(T*)(row + x));
         *(T*)(buf + irow + x) = cells;
     }
 
@@ -173,7 +173,7 @@ inline void simulate_row_simd_int_g(char* grid, char* buf, int width,
     se_cells = s_cells >> 8 | ((T)(*rsouth) << ((vec_len - 1) * 8));
     cells = n_cells + nw_cells + ne_cells + w_cells + e_cells + s_cells + 
             sw_cells + se_cells;
-    cells = alive_simd_int<T>(cells, r_cells);
+    cells = cpu_simd_int_alive<T>(cells, r_cells);
     *(T*)(buf + irow + width - vec_len) = cells;
 }
 
@@ -189,33 +189,33 @@ void sim_cpu_simd_int(char* grid, int width, int height, int gens)
 
     /* Grids with the same width as the size of the specified integer type T 
     are handled separately because they can be optimized even further. See 
-    simulate_row_simd_int_e(). */
+    cpu_simd_int_row_e(). */
     if (width == vec_len) {
         for (int i = 0; i < gens; ++i) {
-            simulate_row_simd_int_e<T>(grid, buf, width, height, 0, 
+            cpu_simd_int_row_e<T>(grid, buf, width, height, 0, 
                 height - 1, 1); // First row
             
             for (int y = 1; y < height - 1; ++y) { // Middle rows
-                simulate_row_simd_int_e<T>(grid, buf, width, height, y, y - 1, 
+                cpu_simd_int_row_e<T>(grid, buf, width, height, y, y - 1, 
                     y + 1);
             }
 
-            simulate_row_simd_int_e<T>(grid, buf, width, height, height - 1,
+            cpu_simd_int_row_e<T>(grid, buf, width, height, height - 1,
                 height - 2, 0); // Last row
             swap_ptr(char*, grid, buf);
         }
     }
     else {
         for (int i = 0; i < gens; ++i) {
-            simulate_row_simd_int_g<T>(grid, buf, width, height, 0, 
+            cpu_simd_int_row_g<T>(grid, buf, width, height, 0, 
                 height - 1, 1); // First row
 
             for (int y = 1; y < height - 1; ++y) { // Middle rows
-                simulate_row_simd_int_g<T>(grid, buf, width, height, y, 
+                cpu_simd_int_row_g<T>(grid, buf, width, height, y, 
                     y - 1, y + 1);
             }
 
-            simulate_row_simd_int_g<T>(grid, buf, width, height, height - 1,
+            cpu_simd_int_row_g<T>(grid, buf, width, height, height - 1,
                 height - 2, 0); // Last row
             swap_ptr(char*, grid, buf);
         }
