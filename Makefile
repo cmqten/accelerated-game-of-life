@@ -1,10 +1,10 @@
 CXX = g++
-CXX_FLAGS = -std=c++17 -Wall -msse2 -mssse3
-LD_FLAGS = 
+CXX_FLAGS = -std=c++17 -Wall -msse2 -mssse3 -fopenmp
+LD_FLAGS =
 OPT = -O2 -funroll-loops -funswitch-loops
 
 EXE = generate simulate
-OBJ = cell_world.o sim_cpu_sequential.o sim_cpu_simd.o
+OBJ = cell_world.o sim_cpu_sequential.o sim_cpu_simd.o sim_cpu_omp.o
 
 all: $(EXE)
 
