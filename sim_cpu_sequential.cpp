@@ -14,7 +14,7 @@
 
 /* Simulates the cells in row y for one generation. The input is grid and the 
  * output is buf. */
-static inline void simulate_row(char* grid, char* buf, int width, int height, 
+static inline void cpu_seq_row(char* grid, char* buf, int width, int height, 
     int y, int ynorth, int ysouth)
 {
     int irow = y * width;
@@ -70,13 +70,13 @@ void sim_cpu_sequential(char* grid, int width, int height, int gens)
     prevents having to do a conditional check every iteration, which has 
     significant overhead. */
     for (int i = 0; i < gens; ++i) {
-        simulate_row(grid, buf, width, height, 0, height - 1, 1); // First row
+        cpu_seq_row(grid, buf, width, height, 0, height - 1, 1); // First row
 
         for (int y = 1; y < height - 1; ++y) // Middle rows
-            simulate_row(grid, buf, width, height, y, y - 1, y + 1);
+            cpu_seq_row(grid, buf, width, height, y, y - 1, y + 1);
 
         // Last row
-        simulate_row(grid, buf, width, height, height - 1, height - 2, 0);
+        cpu_seq_row(grid, buf, width, height, height - 1, height - 2, 0);
         swap_ptr(char*, grid, buf);
     }
 
