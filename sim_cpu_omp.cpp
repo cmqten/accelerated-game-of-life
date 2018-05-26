@@ -9,8 +9,8 @@
 #include <omp.h>
 #include "sim_cpu_simd.hpp"
 
-static int threads = 4; // Modify as needed
-static const int cache_line_size = 64; // Depends on system, most are 64
+int threads = 4; // Modify as needed
+int cache_line = 64; // Depends on system, most are 64
 
 /* OpenMP multithreaded version of sim_cpu_simd_16() */
 static void sim_cpu_omp_simd_16(char* grid, int width, int height, int gens)
@@ -25,8 +25,8 @@ static void sim_cpu_omp_simd_16(char* grid, int width, int height, int gens)
 
     /* Guarantees that every thread gets at least one cache line worth of cells
     to prevent false sharing. */
-    if (cells_per_thread < cache_line_size)
-        rows_per_thread = (cache_line_size + width - 1) / width;
+    if (cells_per_thread < cache_line)
+        rows_per_thread = (cache_line + width - 1) / width;
 
     /* Guarantees that only the exact amount of threads needed are spawned. 
     Prevents cases such as 3 rows and 4 threads, 1 thread is not doing work. */
@@ -36,8 +36,7 @@ static void sim_cpu_omp_simd_16(char* grid, int width, int height, int gens)
     optimized even further. See cpu_simd_16_row_e(). */
     if (width == 16) {
         #pragma omp parallel num_threads(threads) default(none) \
-        shared(width, height, gens, size, cells_per_thread, rows_per_thread) \
-        firstprivate(grid, buf)
+        shared(width, height, gens, rows_per_thread) firstprivate(grid, buf)
         {
             int tid = omp_get_thread_num();
             int start_y = tid * rows_per_thread;
@@ -57,8 +56,7 @@ static void sim_cpu_omp_simd_16(char* grid, int width, int height, int gens)
     }
     else {
         #pragma omp parallel num_threads(threads) default(none) \
-        shared(width, height, gens, size, cells_per_thread, rows_per_thread) \
-        firstprivate(grid, buf)
+        shared(width, height, gens, rows_per_thread) firstprivate(grid, buf)
         {
             int tid = omp_get_thread_num();
             int start_y = tid * rows_per_thread;
@@ -87,6 +85,9 @@ static void sim_cpu_omp_simd_16(char* grid, int width, int height, int gens)
 template <class T>
 static void sim_cpu_omp_simd_int(char* grid, int width, int height, int gens)
 {
+    throw_false<std::invalid_argument>(width >= (int)sizeof(T), "width of the "
+        "grid must be at least " + std::to_string(sizeof(T)));
+    
     int size = width * height;
     char* buf = new char[size];
     int rows_per_thread = (height + threads - 1) / threads;
@@ -94,8 +95,8 @@ static void sim_cpu_omp_simd_int(char* grid, int width, int height, int gens)
 
     /* Guarantees that every thread gets at least one cache line worth of cells
     to prevent false sharing */
-    if (cells_per_thread < cache_line_size)
-        rows_per_thread = (cache_line_size + width - 1) / width;
+    if (cells_per_thread < cache_line)
+        rows_per_thread = (cache_line + width - 1) / width;
 
     /* Guarantees that only the exact amount of threads needed are spawned. 
     Prevents cases such as 3 rows and 4 threads, 1 thread is not doing work. */
@@ -106,8 +107,7 @@ static void sim_cpu_omp_simd_int(char* grid, int width, int height, int gens)
     cpu_simd_int_row_e(). */
     if (width == sizeof(T)) {
         #pragma omp parallel num_threads(threads) default(none) \
-        shared(width, height, gens, size, cells_per_thread, rows_per_thread) \
-        firstprivate(grid, buf)
+        shared(width, height, gens, rows_per_thread) firstprivate(grid, buf)
         {
             int tid = omp_get_thread_num();
             int start_y = tid * rows_per_thread;
@@ -127,8 +127,7 @@ static void sim_cpu_omp_simd_int(char* grid, int width, int height, int gens)
     }
     else {
         #pragma omp parallel num_threads(threads) default(none) \
-        shared(width, height, gens, size, cells_per_thread, rows_per_thread) \
-        firstprivate(grid, buf)
+        shared(width, height, gens, rows_per_thread) firstprivate(grid, buf)
         {
             int tid = omp_get_thread_num();
             int start_y = tid * rows_per_thread;
