@@ -25,11 +25,11 @@ static inline void cpu_seq_row(char* grid, char* buf, int width, int height,
     around. */ 
     int x = 0;
     int idx = irow;
-    int iwest = width - 1;
-    int ieast = 1;
-    char cell = grid[inorth + iwest] + grid[inorth] + grid[inorth + ieast] + 
-                grid[irow + iwest] + grid[irow + ieast] + 
-                grid[isouth + iwest] + grid[isouth] + grid[isouth + ieast];
+    int xwest = width - 1;
+    int xeast = 1;
+    char cell = grid[inorth + xwest] + grid[inorth] + grid[inorth + xeast] + 
+                grid[irow + xwest] + grid[irow + xeast] + 
+                grid[isouth + xwest] + grid[isouth] + grid[isouth + xeast];
     cell = (cell == 3) | ((cell == 2) & grid[irow]);
     buf[irow] = cell;
     
@@ -37,12 +37,12 @@ static inline void cpu_seq_row(char* grid, char* buf, int width, int height,
     less and one more than the row index, respectively. */
     for (x = 1; x < width - 1; ++x) {
         idx = irow + x;
-        iwest = x - 1;
-        ieast = x + 1;
-        cell = grid[inorth + iwest] + grid[inorth + x] + 
-               grid[inorth + ieast] + grid[irow + iwest] + 
-               grid[irow + ieast] + grid[isouth + iwest] + 
-               grid[isouth + x] + grid[isouth + ieast];
+        xwest = x - 1;
+        xeast = x + 1;
+        cell = grid[inorth + xwest] + grid[inorth + x] + 
+               grid[inorth + xeast] + grid[irow + xwest] + 
+               grid[irow + xeast] + grid[isouth + xwest] + 
+               grid[isouth + x] + grid[isouth + xeast];
         cell = (cell == 3) | ((cell == 2) & grid[idx]);
         buf[idx] = cell;
     }
@@ -51,11 +51,11 @@ static inline void cpu_seq_row(char* grid, char* buf, int width, int height,
     around. */
     x = width - 1;
     idx = irow + x;
-    iwest = width - 2;
-    ieast = 0;
-    cell = grid[inorth + iwest] + grid[inorth + x] + grid[inorth + ieast] + 
-           grid[irow + iwest] + grid[irow + ieast] + grid[isouth + iwest] +
-           grid[isouth + x] + grid[isouth + ieast];
+    xwest = width - 2;
+    xeast = 0;
+    cell = grid[inorth + xwest] + grid[inorth + x] + grid[inorth + xeast] + 
+           grid[irow + xwest] + grid[irow + xeast] + grid[isouth + xwest] +
+           grid[isouth + x] + grid[isouth + xeast];
     cell = (cell == 3) | ((cell == 2) & grid[idx]);
     buf[idx] = cell;
 }
