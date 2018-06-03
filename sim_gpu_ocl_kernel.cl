@@ -1,3 +1,6 @@
+constant uchar8 w_mask8 = (uchar8)(7, 8, 9, 10, 11, 12, 13 ,14);
+constant uchar8 e_mask8 = (uchar8)(1, 2, 3, 4, 5, 6, 7, 8);
+
 inline char8 life_kernel_alive_simd8(char8 count, char8 state)
 {
     return ((count == (char8)(3)) | ((count == (char8)(2)) & state)) & 
@@ -28,17 +31,23 @@ kernel void life_kernel_simd8(global char* grid, global char* buf, int width,
 
             // Do the first vector
             char8 n_cells = vload8(0, rnorth);
-            char8 ne_cells = vload8(0, rnorth + 1);
+            char8 ne_cells = shuffle2(n_cells, (char8)(*(rnorth + vec_len)),
+                e_mask8);
             char8 nw_cells = shuffle2((char8)(*(rnorth + width - 1)), n_cells, 
-                (uchar8)(7, 8, 9, 10, 11, 12, 13 ,14));
+                w_mask8);
+
             char8 cells = vload8(0, row);
-            char8 e_cells = vload8(0, row + 1);
+            char8 e_cells = shuffle2(cells, (char8)(*(row + vec_len)),
+                e_mask8);
             char8 w_cells = shuffle2((char8)(*(row + width - 1)), cells, 
-                (uchar8)(7, 8, 9, 10, 11, 12, 13 ,14));
+                w_mask8);
+
             char8 s_cells = vload8(0, rsouth);
-            char8 se_cells = vload8(0, rsouth + 1);
+            char8 se_cells = shuffle2(s_cells, (char8)(*(rsouth + vec_len)),
+                e_mask8);
             char8 sw_cells = shuffle2((char8)(*(rsouth + width - 1)), s_cells, 
-                (uchar8)(7, 8, 9, 10, 11, 12, 13 ,14));
+                w_mask8);
+
             vstore8(life_kernel_alive_simd8(
                 n_cells + ne_cells + nw_cells + e_cells + w_cells + 
                 s_cells + se_cells + sw_cells, cells 
@@ -47,17 +56,25 @@ kernel void life_kernel_simd8(global char* grid, global char* buf, int width,
             // Do the middle vectors
             for (int x = stride; x < width - vec_len; x += stride) {
                 int xwest = x - 1;
-                int xeast = x + 1;
 
                 n_cells = vload8(0, rnorth + x);
-                ne_cells = vload8(0, rnorth + xeast);
-                nw_cells = vload8(0, rnorth + xwest);
+                ne_cells = shuffle2(n_cells, (char8)(*(rnorth + x + vec_len)),
+                    e_mask8);
+                nw_cells = shuffle2((char8)(*(rnorth + xwest)), n_cells, 
+                    w_mask8);
+
                 cells = vload8(0, row + x);
-                e_cells = vload8(0, row + xeast);
-                w_cells = vload8(0, row + xwest);
+                e_cells = shuffle2(cells, (char8)(*(row + x + vec_len)),
+                    e_mask8);
+                w_cells = shuffle2((char8)(*(row + xwest)), cells, 
+                    w_mask8);
+
                 s_cells = vload8(0, rsouth + x);
-                se_cells = vload8(0, rsouth + xeast);
-                sw_cells = vload8(0, rsouth + xwest);
+                se_cells = shuffle2(s_cells, (char8)(*(rsouth + x + vec_len)),
+                    e_mask8);
+                sw_cells = shuffle2((char8)(*(rsouth + xwest)), s_cells, 
+                    w_mask8);
+
                 vstore8(life_kernel_alive_simd8(
                     n_cells + ne_cells + nw_cells + e_cells + w_cells + 
                     s_cells + se_cells + sw_cells, cells 
@@ -66,17 +83,23 @@ kernel void life_kernel_simd8(global char* grid, global char* buf, int width,
 
             // Do the last vector
             n_cells = vload8(0, rnorth + width - vec_len);
-            nw_cells = vload8(0, rnorth + width - vec_len - 1);
+            nw_cells = shuffle2((char8)(*(rnorth + width - vec_len - 1)),
+                n_cells, w_mask8);
             ne_cells = shuffle2(n_cells, (char8)(*rnorth), 
-                (uchar8)(1, 2, 3, 4, 5, 6, 7, 8));
+                e_mask8);
+
             cells = vload8(0, row + width - vec_len);
-            w_cells = vload8(0, row + width - vec_len - 1);
+            w_cells = shuffle2((char8)(*(row + width - vec_len - 1)), cells, 
+                w_mask8);
             e_cells = shuffle2(cells, (char8)(*row), 
-                (uchar8)(1, 2, 3, 4, 5, 6, 7, 8));
+                e_mask8);
+
             s_cells = vload8(0, rsouth + width - vec_len);
-            sw_cells = vload8(0, rsouth + width - vec_len - 1);
+            sw_cells = shuffle2((char8)(*(rsouth + width - vec_len - 1)),
+                s_cells, w_mask8);
             se_cells = shuffle2(s_cells, (char8)(*rsouth), 
-                (uchar8)(1, 2, 3, 4, 5, 6, 7, 8));
+                e_mask8);
+
             vstore8(life_kernel_alive_simd8(
                 n_cells + ne_cells + nw_cells + e_cells + w_cells + 
                 s_cells + se_cells + sw_cells, cells 
@@ -97,16 +120,25 @@ kernel void life_kernel_simd8(global char* grid, global char* buf, int width,
             
             for (int x = x_start; x < width - vec_len; x += stride) {
                 int xwest = x - 1;
-                int xeast = x + 1;
+
                 char8 n_cells = vload8(0, rnorth + x);
-                char8 ne_cells = vload8(0, rnorth + xeast);
-                char8 nw_cells = vload8(0, rnorth + xwest);
+                char8 ne_cells = shuffle2(n_cells, (char8)(*(rnorth + x + 
+                    vec_len)), e_mask8);
+                char8 nw_cells = shuffle2((char8)(*(rnorth + xwest)), n_cells, 
+                    w_mask8);
+
                 char8 cells = vload8(0, row + x);
-                char8 e_cells = vload8(0, row + xeast);
-                char8 w_cells = vload8(0, row + xwest);
+                char8 e_cells = shuffle2(cells, (char8)(*(row + x + vec_len)),
+                    e_mask8);
+                char8 w_cells = shuffle2((char8)(*(row + xwest)), cells, 
+                    w_mask8);
+
                 char8 s_cells = vload8(0, rsouth + x);
-                char8 se_cells = vload8(0, rsouth + xeast);
-                char8 sw_cells = vload8(0, rsouth + xwest);
+                char8 se_cells = shuffle2(s_cells, (char8)(*(rsouth + x + 
+                    vec_len)), e_mask8);
+                char8 sw_cells = shuffle2((char8)(*(rsouth + xwest)), s_cells, 
+                    w_mask8);
+
                 vstore8(life_kernel_alive_simd8(
                     n_cells + ne_cells + nw_cells + e_cells + w_cells + 
                     s_cells + se_cells + sw_cells, cells 
