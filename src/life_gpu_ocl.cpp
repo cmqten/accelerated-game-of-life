@@ -1,10 +1,10 @@
 #include <CL/cl.hpp>
 #include <fstream>
 #include <iostream>
-#include <sim.hpp>
+#include <life.hpp>
 #include <util.hpp>
 
-void sim_gpu_ocl(char* grid, int width, int height, int gens)
+void life_gpu_ocl(char* grid, int width, int height, int gens)
 {
     // Get default device
     cl_int err;
@@ -15,7 +15,7 @@ void sim_gpu_ocl(char* grid, int width, int height, int gens)
     cl::Context context({device});
 
     // Build source
-    std::string source_path = "kernels/sim_gpu_ocl_kernel_16.cl";
+    std::string source_path = "kernels/life_ocl_kernel_8.cl";
     std::ifstream source_file(source_path);
     std::string source_code(std::istreambuf_iterator<char>(source_file),
         (std::istreambuf_iterator<char>()));
@@ -30,7 +30,7 @@ void sim_gpu_ocl(char* grid, int width, int height, int gens)
 
     // Command queue and kernels
     cl::CommandQueue queue(context, device);
-    cl::Kernel sim_gpu_ocl_kernel(program, "sim_gpu_ocl_kernel");
+    cl::Kernel sim_gpu_ocl_kernel(program, "life_kernel");
 
     // Device memory
     int size = width * height;
@@ -40,6 +40,7 @@ void sim_gpu_ocl(char* grid, int width, int height, int gens)
 
     my_timer timer;
     timer.start();
+
     // Launch kernel for every generation
     sim_gpu_ocl_kernel.setArg<int>(2, width);
     sim_gpu_ocl_kernel.setArg<int>(3, height);
@@ -65,12 +66,12 @@ void sim_gpu_ocl(char* grid, int width, int height, int gens)
         queue.enqueueNDRangeKernel(sim_gpu_ocl_kernel, cl::NullRange, 
             cl::NDRange(global_w, global_h), cl::NDRange(wg_w, wg_h));
         queue.finish();
-        std::cout << timer.stop() << " : ";
+        std::cout << timer.stop();
         queue.enqueueReadBuffer(buf_d, CL_TRUE, 0, size, grid);
     }
     else {
         queue.finish();
-        std::cout << timer.stop() << " : ";
+        std::cout << timer.stop();
         queue.enqueueReadBuffer(grid_d, CL_TRUE, 0, size, grid);
     }
     queue.finish();

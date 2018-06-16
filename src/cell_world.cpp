@@ -12,8 +12,6 @@
  * 3. A living cell with two or three neighbors survives.
  * 4. A dead cell with three neighbors becomes alive due to reproduction.
  * 
- * Formerly called game_of_life.cpp
- * 
  * Author: Carl Marquez
  * Created on: April 21, 2018
  */
@@ -27,7 +25,7 @@
  * new) since grid is deallocated using delete[] in the destructor of 
  * cell_world. */
 cell_world cell_world::create_from_buffer(char* buf, int width, int height,
-    std::function<void(char*, int, int, int)> simulator)
+    std::function<void(char*, int, int, int)> lifesim)
 {
     throw_grid_null<std::invalid_argument>(buf);
     throw_width_out_of_range<std::invalid_argument>(width);
@@ -36,7 +34,7 @@ cell_world cell_world::create_from_buffer(char* buf, int width, int height,
     int size = width * height;
     char* grid = new char[size];
     memcpy(grid, buf, size);
-    return cell_world(grid, width, height, simulator);
+    return cell_world(grid, width, height, lifesim);
 }
 
 /* Copies an existing instance of cell_world. Use this instead of the copy
@@ -45,13 +43,13 @@ cell_world cell_world::create_from_buffer(char* buf, int width, int height,
 cell_world cell_world::create_from_existing(const cell_world& other) 
 {
     return cell_world::create_from_buffer(other.grid, other.width, other.height,
-        other.simulator);
+        other.lifesim);
 }
 
 /* The file must be a plain pbm file with the specified format in the header
  * file cell_world.hpp. */
 cell_world cell_world::create_from_file(const std::string& filename,
-    std::function<void(char*, int, int, int)> simulator) 
+    std::function<void(char*, int, int, int)> lifesim) 
 {
     std::ifstream file;
     file.open(filename);
@@ -79,11 +77,11 @@ cell_world cell_world::create_from_file(const std::string& filename,
     file.read(grid, size);   
     file.close();
     for (int i = 0; i < size; ++i) grid[i] -= '0'; // ascii to int
-    return cell_world(grid, width, height, simulator);
+    return cell_world(grid, width, height, lifesim);
 }
 
 cell_world cell_world::create_random(int width, int height, int percent,
-    std::function<void(char*, int, int, int)> simulator)
+    std::function<void(char*, int, int, int)> lifesim)
 {
     throw_width_out_of_range<std::invalid_argument>(width);
     throw_height_out_of_range<std::invalid_argument>(height);
@@ -94,13 +92,13 @@ cell_world cell_world::create_random(int width, int height, int percent,
     char* grid = new char[size];
     srand(time(nullptr));
     for (int i = 0; i < size; ++i) grid[i] = ((rand() % 100) < percent);
-    return cell_world(grid, width, height, simulator);
+    return cell_world(grid, width, height, lifesim);
 }
 
 cell_world::cell_world(char* grid, int width, int height,
-    std::function<void(char*, int, int, int)> simulator) : 
+    std::function<void(char*, int, int, int)> lifesim) : 
     grid(grid), width(width), height(height), size(width * height),
-    simulator(simulator)
+    lifesim(lifesim)
 { 
 }
 
@@ -145,9 +143,9 @@ void cell_world::save_grid(const std::string& filename) const
 
 double cell_world::simulate(int gens)
 {
-    if (simulator == nullptr) return -1.0;
+    if (lifesim == nullptr) return -1.0;
     my_timer timer;
     timer.start();
-    simulator(grid, width, height, gens);
+    lifesim(grid, width, height, gens);
     return timer.stop();
 }

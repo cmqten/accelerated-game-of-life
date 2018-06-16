@@ -1,14 +1,28 @@
 #!/usr/bin/env bash
 
-BUILD_DIR="./build"
+PROJDIR=`dirname $(realpath $0)`
+OUTDIR="$PROJDIR/build"
 
-if [ -e $BUILD_DIR ]; then
-    cd $BUILD_DIR
+function usage_msg {
+    echo "Usage:"
+    echo "    build.sh : build project"
+    echo "    build.sh clean : clean project"
+}
+
+if [ $# == 0 ] && [ -e $OUTDIR ]; then # Build if build directory exists already
+    cd $OUTDIR
     make -j 4
-    exit
+elif [ $# == 0 ] && [ ! -e $OUTDIR ]; then # Create build directory first
+    mkdir $OUTDIR
+    cd $OUTDIR
+    cmake ../
+    make -j 4
+elif [ $# == 1 ]; then 
+    if [ $1 == "clean" ]; then # Delete build directory
+        rm -rf $OUTDIR
+    else
+        usage_msg
+    fi    
+else
+    usage_msg
 fi
-
-mkdir $BUILD_DIR
-cd $BUILD_DIR
-cmake ../
-make -j 4

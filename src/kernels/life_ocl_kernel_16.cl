@@ -9,7 +9,7 @@ inline char16 alive(char16 count, char16 state)
         (char16)(1);
 }
 
-kernel void sim_gpu_ocl_kernel(global char* grid, global char* buf, int width,
+kernel void life_kernel(global char* grid, global char* buf, int width,
     int height)
 {
     int vec_len = sizeof(char16);
@@ -51,8 +51,8 @@ kernel void sim_gpu_ocl_kernel(global char* grid, global char* buf, int width,
                 w_mask);
 
             vstore16(alive(
-                n_cells + ne_cells + nw_cells + e_cells + w_cells +  s_cells + 
-                e_cells + sw_cells, cells 
+                n_cells + ne_cells + nw_cells + e_cells + w_cells + 
+                s_cells + se_cells + sw_cells, cells 
             ), 0, buf + irow);
 
             // Do the middle vectors
@@ -100,8 +100,8 @@ kernel void sim_gpu_ocl_kernel(global char* grid, global char* buf, int width,
             se_cells = shuffle2(s_cells, (char16)(*rsouth), e_mask);
 
             vstore16(alive(
-                n_cells + ne_cells + nw_cells + e_cells + w_cells + s_cells + 
-                se_cells + sw_cells, cells 
+                n_cells + ne_cells + nw_cells + e_cells + w_cells + 
+                s_cells + se_cells + sw_cells, cells 
             ), 0, buf + irow + width - vec_len);
         }
     }

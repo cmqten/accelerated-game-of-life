@@ -1,5 +1,5 @@
 /**
- * sim_cpu_simd.hpp
+ * life_cpu_simd.hpp
  * 
  * Optimized data parallel implementation of Conway's Game of Life using SIMD 
  * operations. Uses SSE2 and SSSE3 extensions.
@@ -19,8 +19,8 @@
 
 #include <cstring>
 #include <x86intrin.h>
-#include "sim.hpp"
-#include "util.hpp"
+#include <life.hpp>
+#include <util.hpp>
 
 /*******************************************************************************
  * CPU SIMD 128-bit vector SSE2/SSSE3
@@ -29,7 +29,7 @@
  * process cells in parallel. 
  ******************************************************************************/
 
-void sim_cpu_simd_16(char* grid, int width, int height, int gens);
+void life_cpu_simd_16(char* grid, int width, int height, int gens);
 
 /* Calculates the next states of 16 cells in a vector. */
 static inline __m128i cpu_simd_16_alive(__m128i count, __m128i state)
@@ -327,7 +327,7 @@ static inline void cpu_simd_int_row_g(char* grid, char* buf, int width,
 }
 
 template <class T>
-void sim_cpu_simd_int(char* grid, int width, int height, int gens)
+void life_cpu_simd_int(char* grid, int width, int height, int gens)
 {
     int vec_len = sizeof(T);
     throw_false<std::invalid_argument>(width >= vec_len, "width of the grid "

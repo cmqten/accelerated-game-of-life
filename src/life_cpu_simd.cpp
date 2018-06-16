@@ -1,5 +1,5 @@
 /**
- * sim_cpu_simd.cpp
+ * life_cpu_simd.cpp
  * 
  * Optimized data parallel implementation of Conway's Game of Life using SIMD 
  * operations. Uses SSE2 and SSSE3 extensions.
@@ -9,21 +9,19 @@
  * only guaranteed to work on an x86_64 system with the extensions specified 
  * above.
  * 
- * Formerly called game_of_life_cpu_simd.cpp.
- * 
  * Author: Carl Marquez
  * Created on: May 7, 2018
  */
 #include <cstring>
 #include <x86intrin.h>
-#include <sim_cpu_simd.hpp>
-#include <sim.hpp>
+#include <life_cpu_simd.hpp>
+#include <life.hpp>
 #include <util.hpp>
 
 /* CPU SIMD 128-bit vector SSE2/SSSE3
  * 
  * Simulator which processes 16 cells simultaneously using SIMD operations. */
-void sim_cpu_simd_16(char* grid, int width, int height, int gens)
+void life_cpu_simd_16(char* grid, int width, int height, int gens)
 {
     throw_false<std::invalid_argument>(width >= 16, "width of the grid must be"
         " at least 16");
@@ -73,16 +71,16 @@ void sim_cpu_simd_16(char* grid, int width, int height, int gens)
  * 
  * Different width ranges are handled separately to maximize vector size for 
  * maximum parallelism without overrunning a row (vector size > width). */ 
-void sim_cpu_simd(char* grid, int width, int height, int gens)
+void life_cpu_simd(char* grid, int width, int height, int gens)
 {
     if (width >= 16) 
-        sim_cpu_simd_16(grid, width, height, gens);
+        life_cpu_simd_16(grid, width, height, gens);
     else if (width >= 8)
-        sim_cpu_simd_int<uint64_t>(grid, width, height, gens);
+        life_cpu_simd_int<uint64_t>(grid, width, height, gens);
     else if (width >= 4)
-        sim_cpu_simd_int<uint32_t>(grid, width, height, gens);
+        life_cpu_simd_int<uint32_t>(grid, width, height, gens);
     else if (width >= 2)
-        sim_cpu_simd_int<uint16_t>(grid, width, height, gens);
+        life_cpu_simd_int<uint16_t>(grid, width, height, gens);
     else
-        sim_cpu_simd_int<uint8_t>(grid, width, height, gens);
+        life_cpu_simd_int<uint8_t>(grid, width, height, gens);
 }

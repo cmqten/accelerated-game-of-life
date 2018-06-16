@@ -7,7 +7,7 @@ inline char8 alive(char8 count, char8 state)
         (char8)(1);
 }
 
-kernel void sim_gpu_ocl_kernel(global char* grid, global char* buf, int width,
+kernel void life_kernel(global char* grid, global char* buf, int width,
     int height)
 {
     int vec_len = sizeof(char8);

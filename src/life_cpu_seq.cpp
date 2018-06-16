@@ -1,15 +1,13 @@
 /**
- * sim_cpu_seq.cpp
+ * life_cpu_seq.cpp
  * 
  * Optimized sequential CPU implementation of Conway's Game of Life.
- * 
- * Formerly called game_of_life_cpu_sequential.cpp.
  * 
  * Author: Carl Marquez
  * Created on: May 5, 2018
  */
 #include <cstring>
-#include <sim.hpp>
+#include <life.hpp>
 #include <util.hpp>
 
 /* Simulates the cells in row y for one generation. The input is grid and the 
@@ -60,7 +58,7 @@ static inline void cpu_seq_row(char* grid, char* buf, int width, int height,
     buf[idx] = cell;
 }
 
-void sim_cpu_sequential(char* grid, int width, int height, int gens)
+void life_cpu_seq(char* grid, int width, int height, int gens)
 {
     int size = width * height;
     char* buf = new char[size];
