@@ -1,6 +1,6 @@
 CXX = g++
-CXX_FLAGS = -std=c++17 -Wall -msse2 -mssse3 -fopenmp -lOpenCL
-LD_FLAGS = -fopenmp -lOpenCL
+CXX_FLAGS = -std=c++17 -Wall -msse2 -mssse3 -fopenmp
+LD_FLAGS = -lOpenCL
 OPT = -O2 -funroll-loops -funswitch-loops
 
 EXE = generate simulate

@@ -29,12 +29,12 @@ void sim_gpu_ocl(char* grid, int width, int height, int gens)
 
     // Command queue and kernels
     cl::CommandQueue queue(context, device);
-    cl::Kernel gpu_life(program, "life_kernel_simd8");
+    cl::Kernel gpu_life(program, "life_kernel_simd16");
 
     // Device memory
     int size = width * height;
     cl::Buffer grid_d(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, 
-        static_cast<size_t>(size), grid);
+        (size_t)size, grid);
     cl::Buffer buf_d(context, CL_MEM_READ_WRITE, size);
 
     my_timer timer;
@@ -43,8 +43,8 @@ void sim_gpu_ocl(char* grid, int width, int height, int gens)
     gpu_life.setArg<int>(2, width);
     gpu_life.setArg<int>(3, height);
 
-    int global_w = 256;
-    int global_h = 256;
+    int global_w = 128;
+    int global_h = 128;
     int wg_w = 16;
     int wg_h = 16;
 
