@@ -69,7 +69,7 @@ class cell_world
 {
 private:
     explicit cell_world(char* grid, int width, int height, 
-        std::function<void(char*, int, int, int)> simulator);
+        std::function<void(char*, int, int, int)> lifesim);
     
     char* grid;
 
@@ -77,7 +77,7 @@ public:
     const int width;
     const int height;
     const int size;
-    std::function<void(char*, int, int, int)> simulator;
+    std::function<void(char*, int, int, int)> lifesim;
 
     ~cell_world();
 
@@ -102,7 +102,7 @@ public:
      * instance of cell_world. Throws an invalid_argument if the buffer is 
      * null or the dimensions are out of range. */
     static cell_world create_from_buffer(char* buf, int width, int height,
-        std::function<void(char*, int, int, int)> simulator = nullptr);
+        std::function<void(char*, int, int, int)> lifesim = nullptr);
     
     /* Creates a copy of an existing cell_world instance. */
     static cell_world create_from_existing(const cell_world& other);
@@ -112,13 +112,13 @@ public:
      * overflow the long datatype, or out_of_range if the dimensions are out
      * of the min and max ranges specified above. */
     static cell_world create_from_file(const std::string& filename,
-        std::function<void(char*, int, int, int)> simulator = nullptr);
+        std::function<void(char*, int, int, int)> lifesim = nullptr);
     
     /* Generates a random grid of the specified width, height, and population
      * percentage. Throws an invalid_argument if any of the width, height, or 
      * percent are out of range. */
     static cell_world create_random(int width, int height, int percent,
-        std::function<void(char*, int, int, int)> simulator = nullptr);
+        std::function<void(char*, int, int, int)> lifesim = nullptr);
 };
 
 /* The following templates compare values (grid, width, height) with values

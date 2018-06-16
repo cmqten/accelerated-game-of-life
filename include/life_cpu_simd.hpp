@@ -1,5 +1,5 @@
 /**
- * sim_cpu_simd.hpp
+ * life_cpu_simd.hpp
  * 
  * Optimized data parallel implementation of Conway's Game of Life using SIMD 
  * operations. Uses SSE2 and SSSE3 extensions.
@@ -19,8 +19,8 @@
 
 #include <cstring>
 #include <x86intrin.h>
-#include "sim.hpp"
-#include "util.hpp"
+#include <life.hpp>
+#include <util.hpp>
 
 /*******************************************************************************
  * CPU SIMD 128-bit vector SSE2/SSSE3
@@ -29,7 +29,7 @@
  * process cells in parallel. 
  ******************************************************************************/
 
-void sim_cpu_simd_16(char* grid, int width, int height, int gens);
+void life_cpu_simd_16(char* grid, int width, int height, int gens);
 
 /* Calculates the next states of 16 cells in a vector. */
 static inline __m128i cpu_simd_16_alive(__m128i count, __m128i state)
@@ -132,27 +132,27 @@ static inline void cpu_simd_16_row_g(char* grid, char* buf, int width,
 
     // Middle vectors
     for (int x = 16; x < width - 16; x += 16) {
-        int ieast = x + 1;
-        int iwest = x - 1;
+        int xeast = x + 1;
+        int xwest = x - 1;
 
         /* Initialize cells to the north neighbors to clear the cells from the 
         previous iteration. */
         cells = _mm_loadu_si128((__m128i*)(rnorth + x));
-        nw_cells = _mm_loadu_si128((__m128i*)(rnorth + iwest));
+        nw_cells = _mm_loadu_si128((__m128i*)(rnorth + xwest));
         cells = _mm_add_epi8(cells, nw_cells);
-        ne_cells = _mm_loadu_si128((__m128i*)(rnorth + ieast));
+        ne_cells = _mm_loadu_si128((__m128i*)(rnorth + xeast));
         cells = _mm_add_epi8(cells, ne_cells);
         
-        w_cells = _mm_loadu_si128((__m128i*)(row + iwest));
+        w_cells = _mm_loadu_si128((__m128i*)(row + xwest));
         cells = _mm_add_epi8(cells, w_cells);
-        e_cells = _mm_loadu_si128((__m128i*)(row + ieast));
+        e_cells = _mm_loadu_si128((__m128i*)(row + xeast));
         cells = _mm_add_epi8(cells, e_cells);
 
         s_cells = _mm_loadu_si128((__m128i*)(rsouth + x));
         cells = _mm_add_epi8(cells, s_cells);
-        sw_cells = _mm_loadu_si128((__m128i*)(rsouth + iwest));
+        sw_cells = _mm_loadu_si128((__m128i*)(rsouth + xwest));
         cells = _mm_add_epi8(cells, sw_cells);
-        se_cells = _mm_loadu_si128((__m128i*)(rsouth + ieast));
+        se_cells = _mm_loadu_si128((__m128i*)(rsouth + xeast));
         cells = _mm_add_epi8(cells, se_cells);
 
         r_cells = _mm_loadu_si128((__m128i*)(row + x));
@@ -292,17 +292,17 @@ static inline void cpu_simd_int_row_g(char* grid, char* buf, int width,
 
     // Middle vectors
     for (int x = vec_len; x < width - vec_len; x += vec_len) {
-        int ieast = x + 1;
-        int iwest = x - 1;
+        int xeast = x + 1;
+        int xwest = x - 1;
 
         n_cells = *(T*)(rnorth + x);
-        nw_cells = *(T*)(rnorth + iwest);
-        ne_cells = *(T*)(rnorth + ieast);
-        w_cells = *(T*)(row + iwest);
-        e_cells = *(T*)(row + ieast);
+        nw_cells = *(T*)(rnorth + xwest);
+        ne_cells = *(T*)(rnorth + xeast);
+        w_cells = *(T*)(row + xwest);
+        e_cells = *(T*)(row + xeast);
         s_cells = *(T*)(rsouth + x);
-        sw_cells = *(T*)(rsouth + iwest);
-        se_cells = *(T*)(rsouth + ieast);
+        sw_cells = *(T*)(rsouth + xwest);
+        se_cells = *(T*)(rsouth + xeast);
         cells = n_cells + nw_cells + ne_cells + w_cells + e_cells + s_cells + 
                 sw_cells + se_cells;
         cells = cpu_simd_int_alive<T>(cells, *(T*)(row + x));
@@ -327,7 +327,7 @@ static inline void cpu_simd_int_row_g(char* grid, char* buf, int width,
 }
 
 template <class T>
-void sim_cpu_simd_int(char* grid, int width, int height, int gens)
+void life_cpu_simd_int(char* grid, int width, int height, int gens)
 {
     int vec_len = sizeof(T);
     throw_false<std::invalid_argument>(width >= vec_len, "width of the grid "

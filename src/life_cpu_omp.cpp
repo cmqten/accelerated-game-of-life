@@ -1,5 +1,5 @@
 /**
- * sim_cpu_omp.cpp
+ * life_cpu_omp.cpp
  * 
  * Extends the SIMD optimization by running multiple threads using OpenMP.
  * 
@@ -7,13 +7,13 @@
  * Created on: May 19, 2018
  */
 #include <omp.h>
-#include "sim_cpu_simd.hpp"
+#include <life_cpu_simd.hpp>
 
 int threads = 4; // Modify as needed
 int cache_line = 64; // Depends on system, most are 64
 
 /* OpenMP multithreaded version of sim_cpu_simd_16() */
-static void sim_cpu_omp_simd_16(char* grid, int width, int height, int gens)
+static void life_cpu_omp_simd_16(char* grid, int width, int height, int gens)
 {
     throw_false<std::invalid_argument>(width >= 16, "width of the grid must be"
         " at least 16");
@@ -83,7 +83,7 @@ static void sim_cpu_omp_simd_16(char* grid, int width, int height, int gens)
 
 /* OpenMP multithreaded version of sim_cpu_simd_int() */
 template <class T>
-static void sim_cpu_omp_simd_int(char* grid, int width, int height, int gens)
+static void life_cpu_omp_simd_int(char* grid, int width, int height, int gens)
 {
     throw_false<std::invalid_argument>(width >= (int)sizeof(T), "width of the "
         "grid must be at least " + std::to_string(sizeof(T)));
@@ -152,16 +152,16 @@ static void sim_cpu_omp_simd_int(char* grid, int width, int height, int gens)
     delete[] buf;
 }
 
-void sim_cpu_omp(char* grid, int width, int height, int gens)
+void life_cpu_omp(char* grid, int width, int height, int gens)
 {
     if (width >= 16) 
-        sim_cpu_omp_simd_16(grid, width, height, gens);
+        life_cpu_omp_simd_16(grid, width, height, gens);
     else if (width >= 8)
-        sim_cpu_omp_simd_int<uint64_t>(grid, width, height, gens);
+        life_cpu_omp_simd_int<uint64_t>(grid, width, height, gens);
     else if (width >= 4)
-        sim_cpu_omp_simd_int<uint32_t>(grid, width, height, gens);
+        life_cpu_omp_simd_int<uint32_t>(grid, width, height, gens);
     else if (width >= 2)
-        sim_cpu_omp_simd_int<uint16_t>(grid, width, height, gens);
+        life_cpu_omp_simd_int<uint16_t>(grid, width, height, gens);
     else
-        sim_cpu_omp_simd_int<uint8_t>(grid, width, height, gens);
+        life_cpu_omp_simd_int<uint8_t>(grid, width, height, gens);
 }
