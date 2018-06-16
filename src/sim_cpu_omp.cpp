@@ -7,7 +7,7 @@
  * Created on: May 19, 2018
  */
 #include <omp.h>
-#include "sim_cpu_simd.hpp"
+#include <sim_cpu_simd.hpp>
 
 int threads = 4; // Modify as needed
 int cache_line = 64; // Depends on system, most are 64

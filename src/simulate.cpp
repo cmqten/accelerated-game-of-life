@@ -1,7 +1,7 @@
 #include <iostream>
 #include <sys/sysinfo.h>
-#include "cell_world.hpp"
-#include "sim.hpp"
+#include <cell_world.hpp>
+#include <sim.hpp>
 
 int main(int argc, char** argv)
 {

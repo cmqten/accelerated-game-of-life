@@ -1,8 +1,8 @@
 #include <CL/cl.hpp>
 #include <fstream>
 #include <iostream>
-#include "sim.hpp"
-#include "util.hpp"
+#include <sim.hpp>
+#include <util.hpp>
 
 void sim_gpu_ocl(char* grid, int width, int height, int gens)
 {
@@ -15,7 +15,8 @@ void sim_gpu_ocl(char* grid, int width, int height, int gens)
     cl::Context context({device});
 
     // Build source
-    std::ifstream source_file("sim_gpu_ocl_kernel.cl");
+    std::string source_path = "kernels/sim_gpu_ocl_kernel_16.cl";
+    std::ifstream source_file(source_path);
     std::string source_code(std::istreambuf_iterator<char>(source_file),
         (std::istreambuf_iterator<char>()));
 
@@ -29,7 +30,7 @@ void sim_gpu_ocl(char* grid, int width, int height, int gens)
 
     // Command queue and kernels
     cl::CommandQueue queue(context, device);
-    cl::Kernel gpu_life(program, "life_kernel_simd16");
+    cl::Kernel sim_gpu_ocl_kernel(program, "sim_gpu_ocl_kernel");
 
     // Device memory
     int size = width * height;
@@ -40,8 +41,8 @@ void sim_gpu_ocl(char* grid, int width, int height, int gens)
     my_timer timer;
     timer.start();
     // Launch kernel for every generation
-    gpu_life.setArg<int>(2, width);
-    gpu_life.setArg<int>(3, height);
+    sim_gpu_ocl_kernel.setArg<int>(2, width);
+    sim_gpu_ocl_kernel.setArg<int>(3, height);
 
     int global_w = 128;
     int global_h = 128;
@@ -49,19 +50,19 @@ void sim_gpu_ocl(char* grid, int width, int height, int gens)
     int wg_h = 16;
 
     for (int i = 0; i < gens / 2; ++i) {
-        gpu_life.setArg<cl::Buffer>(0, grid_d);
-        gpu_life.setArg<cl::Buffer>(1, buf_d);
-        queue.enqueueNDRangeKernel(gpu_life, cl::NullRange, 
+        sim_gpu_ocl_kernel.setArg<cl::Buffer>(0, grid_d);
+        sim_gpu_ocl_kernel.setArg<cl::Buffer>(1, buf_d);
+        queue.enqueueNDRangeKernel(sim_gpu_ocl_kernel, cl::NullRange, 
             cl::NDRange(global_w, global_h), cl::NDRange(wg_w, wg_h));
-        gpu_life.setArg<cl::Buffer>(0, buf_d);
-        gpu_life.setArg<cl::Buffer>(1, grid_d);
-        queue.enqueueNDRangeKernel(gpu_life, cl::NullRange, 
+        sim_gpu_ocl_kernel.setArg<cl::Buffer>(0, buf_d);
+        sim_gpu_ocl_kernel.setArg<cl::Buffer>(1, grid_d);
+        queue.enqueueNDRangeKernel(sim_gpu_ocl_kernel, cl::NullRange, 
             cl::NDRange(global_w, global_h), cl::NDRange(wg_w, wg_h));
     }
     if (gens & 1) {
-        gpu_life.setArg<cl::Buffer>(0, grid_d);
-        gpu_life.setArg<cl::Buffer>(1, buf_d);
-        queue.enqueueNDRangeKernel(gpu_life, cl::NullRange, 
+        sim_gpu_ocl_kernel.setArg<cl::Buffer>(0, grid_d);
+        sim_gpu_ocl_kernel.setArg<cl::Buffer>(1, buf_d);
+        queue.enqueueNDRangeKernel(sim_gpu_ocl_kernel, cl::NullRange, 
             cl::NDRange(global_w, global_h), cl::NDRange(wg_w, wg_h));
         queue.finish();
         std::cout << timer.stop() << " : ";

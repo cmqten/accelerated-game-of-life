@@ -16,9 +16,9 @@
  */
 #include <cstring>
 #include <x86intrin.h>
-#include "sim_cpu_simd.hpp"
-#include "sim.hpp"
-#include "util.hpp"
+#include <sim_cpu_simd.hpp>
+#include <sim.hpp>
+#include <util.hpp>
 
 /* CPU SIMD 128-bit vector SSE2/SSSE3
  * 

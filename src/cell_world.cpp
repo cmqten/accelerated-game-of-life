@@ -21,7 +21,7 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
-#include "cell_world.hpp"
+#include <cell_world.hpp>
 
 /* A copy of buf is made to ensure that the grid is allocated correctly (using
  * new) since grid is deallocated using delete[] in the destructor of 

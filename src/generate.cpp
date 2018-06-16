@@ -10,8 +10,8 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
-#include "cell_world.hpp"
-#include "util.hpp"
+#include <cell_world.hpp>
+#include <util.hpp>
 
 int main(int argc, char** argv) 
 {
