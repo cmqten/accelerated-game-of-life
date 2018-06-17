@@ -33,27 +33,25 @@ void life_cpu_simd_16(char* grid, int width, int height, int gens)
     optimized even further. See cpu_simd_16_row_e(). */
     if (width == 16) {
         for (int i = 0; i < gens; ++i) {
-            // First row
-            cpu_simd_16_row_e(grid, buf, width, height, 0, height - 1, 1);
+            cpu_simd_16_row_e(grid, buf, width, 0, height - 1, 1); // First row
 
             for (int y = 1; y < height - 1; ++y) // Middle rows
-                cpu_simd_16_row_e(grid, buf, width, height, y, y - 1, y + 1);
+                cpu_simd_16_row_e(grid, buf, width, y, y - 1, y + 1);
 
             // Last row
-            cpu_simd_16_row_e(grid, buf, width, height, height-1, height-2, 0); 
+            cpu_simd_16_row_e(grid, buf, width, height - 1, height - 2, 0); 
             swap_ptr(char*, grid, buf);
         }
     }
     else {
         for (int i = 0; i < gens; ++i) {
-            // First row
-            cpu_simd_16_row_g(grid, buf, width, height, 0, height - 1, 1);
+            cpu_simd_16_row_g(grid, buf, width, 0, height - 1, 1); // First row
 
             for (int y = 1; y < height - 1; ++y) // Middle rows
-                cpu_simd_16_row_g(grid, buf, width, height, y, y - 1, y + 1);
+                cpu_simd_16_row_g(grid, buf, width, y, y - 1, y + 1);
             
             // Last row
-            cpu_simd_16_row_g(grid, buf, width, height, height-1, height-2, 0); 
+            cpu_simd_16_row_g(grid, buf, width, height-1, height-2, 0); 
             swap_ptr(char*, grid, buf);
         }
     }

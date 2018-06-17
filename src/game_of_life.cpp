@@ -1,9 +1,20 @@
+/**
+ * game_of_life.cpp
+ * 
+ * Conway's Game of Life implementation using C++ using various techniques to
+ * optimize for performance.
+ * 
+ * Author: Carl Marquez
+ * Created on: June 15, 2018
+ */ 
 #include <cstdio>
 #include <iostream>
 #include <unistd.h>
 #include <cell_world.hpp>
 #include <life.hpp>
 #include <util.hpp>
+
+char* path;
 
 static void generate(int width, int height, int percent, 
     const std::string& filename)
@@ -57,7 +68,8 @@ static void benchmark(int width, int height, int percent, int gens)
 
 int main(int argc, char** argv)
 {
-    benchmark(1024, 1024, 50, 1000);
+    path = argv[0];
+    benchmark(16, 1024, 50, 100000);
     /*
     char flag;
 

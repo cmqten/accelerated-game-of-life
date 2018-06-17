@@ -48,27 +48,27 @@ static inline __m128i cpu_simd_16_alive(__m128i count, __m128i state)
  * 
  * The _e in the function name stands for equal (width == size of vector). */
 static inline void cpu_simd_16_row_e(char* grid, char* buf, int width, 
-    int height, int y, int ynorth, int ysouth)
+    int y, int y_north, int y_south)
 {
-    int irow = y * width;
-    int inorth = ynorth * width;
-    int isouth = ysouth * width;
+    int i_row = y * width;
+    int i_north = y_north * width;
+    int i_south = y_south * width;
 
     __m128i cells;
-    __m128i n_cells = _mm_load_si128((__m128i*)(grid + inorth));
+    __m128i n_cells = _mm_load_si128((__m128i*)(grid + i_north));
     cells = n_cells;
     __m128i ne_cells = _mm_alignr_epi8(n_cells, n_cells, 1);
     cells = _mm_add_epi8(cells, ne_cells);
     __m128i nw_cells = _mm_alignr_epi8(n_cells, n_cells, 15);
     cells = _mm_add_epi8(cells, nw_cells);
 
-    __m128i r_cells = _mm_load_si128((__m128i*)(grid + irow));
+    __m128i r_cells = _mm_load_si128((__m128i*)(grid + i_row));
     __m128i e_cells = _mm_alignr_epi8(r_cells, r_cells, 1);
     cells = _mm_add_epi8(cells, e_cells);
     __m128i w_cells = _mm_alignr_epi8(r_cells, r_cells, 15);
     cells = _mm_add_epi8(cells, w_cells);
 
-    __m128i s_cells = _mm_load_si128((__m128i*)(grid + isouth));
+    __m128i s_cells = _mm_load_si128((__m128i*)(grid + i_south));
     cells = _mm_add_epi8(cells, s_cells);
     __m128i se_cells = _mm_alignr_epi8(s_cells, s_cells, 1);
     cells = _mm_add_epi8(cells, se_cells);
@@ -76,7 +76,7 @@ static inline void cpu_simd_16_row_e(char* grid, char* buf, int width,
     cells = _mm_add_epi8(cells, sw_cells);
 
     cells = cpu_simd_16_alive(cells, r_cells);
-    _mm_store_si128((__m128i*)(buf + irow), cells);
+    _mm_store_si128((__m128i*)(buf + i_row), cells);
 }
 
 /* If the width of the grid is greater than 16, the first and last vectors of 
@@ -86,16 +86,16 @@ static inline void cpu_simd_16_row_e(char* grid, char* buf, int width,
  * 
  * The _g in the function name stands for greater (width > size of vector). */
 static inline void cpu_simd_16_row_g(char* grid, char* buf, int width, 
-    int height, int y, int ynorth, int ysouth)
+    int y, int y_north, int y_south)
 {
-    int irow = y * width;
-    int inorth = ynorth * width;
-    int isouth = ysouth * width;
+    int i_row = y * width;
+    int i_north = y_north * width;
+    int i_south = y_south * width;
 
     // Pointers to the start of the north, current, and south rows
-    char* rnorth = grid + inorth;
-    char* row = grid + irow;
-    char* rsouth = grid + isouth;
+    char* p_north = grid + i_north;
+    char* p_row = grid + i_row;
+    char* p_south = grid + i_south;
 
     /* First vector of every row is a special case because the west neighbors 
     wrap around. To access the west neighbors (nw, w, sw), the vectors of the 
@@ -104,60 +104,60 @@ static inline void cpu_simd_16_row_g(char* grid, char* buf, int width,
     cell in their respective rows. A left shift is done because the system is 
     little endian. */
     __m128i cells;
-    __m128i n_cells = _mm_loadu_si128((__m128i*)(rnorth));
+    __m128i n_cells = _mm_loadu_si128((__m128i*)(p_north));
     cells = n_cells;
-    __m128i ne_cells = _mm_loadu_si128((__m128i*)(rnorth + 1));
+    __m128i ne_cells = _mm_loadu_si128((__m128i*)(p_north + 1));
     cells = _mm_add_epi8(cells, ne_cells);
     __m128i nw_cells = _mm_slli_si128(n_cells, 1);
-    ((char*)&nw_cells)[0] = *(rnorth + width - 1);
+    ((char*)&nw_cells)[0] = *(p_north + width - 1);
     cells = _mm_add_epi8(cells, nw_cells);
 
-    __m128i r_cells = _mm_loadu_si128((__m128i*)(row));
-    __m128i e_cells = _mm_loadu_si128((__m128i*)(row + 1));
+    __m128i r_cells = _mm_loadu_si128((__m128i*)(p_row));
+    __m128i e_cells = _mm_loadu_si128((__m128i*)(p_row + 1));
     cells = _mm_add_epi8(cells, e_cells);
     __m128i w_cells = _mm_slli_si128(r_cells, 1);
-    ((char*)&w_cells)[0] = *(row + width - 1);
+    ((char*)&w_cells)[0] = *(p_row + width - 1);
     cells = _mm_add_epi8(cells, w_cells);
 
-    __m128i s_cells = _mm_loadu_si128((__m128i*)(rsouth));
+    __m128i s_cells = _mm_loadu_si128((__m128i*)(p_south));
     cells = _mm_add_epi8(cells, s_cells);
-    __m128i se_cells = _mm_loadu_si128((__m128i*)(rsouth + 1));
+    __m128i se_cells = _mm_loadu_si128((__m128i*)(p_south + 1));
     cells = _mm_add_epi8(cells, se_cells);
     __m128i sw_cells = _mm_slli_si128(s_cells, 1);
-    ((char*)&sw_cells)[0] = *(rsouth + width - 1);
+    ((char*)&sw_cells)[0] = *(p_south + width - 1);
     cells = _mm_add_epi8(cells, sw_cells);
 
     cells = cpu_simd_16_alive(cells, r_cells);
-    _mm_storeu_si128((__m128i*)(buf + irow), cells);
+    _mm_storeu_si128((__m128i*)(buf + i_row), cells);
 
     // Middle vectors
     for (int x = 16; x < width - 16; x += 16) {
-        int xeast = x + 1;
-        int xwest = x - 1;
+        int x_east = x + 1;
+        int x_west = x - 1;
 
         /* Initialize cells to the north neighbors to clear the cells from the 
         previous iteration. */
-        cells = _mm_loadu_si128((__m128i*)(rnorth + x));
-        nw_cells = _mm_loadu_si128((__m128i*)(rnorth + xwest));
+        cells = _mm_loadu_si128((__m128i*)(p_north + x));
+        nw_cells = _mm_loadu_si128((__m128i*)(p_north + x_west));
         cells = _mm_add_epi8(cells, nw_cells);
-        ne_cells = _mm_loadu_si128((__m128i*)(rnorth + xeast));
+        ne_cells = _mm_loadu_si128((__m128i*)(p_north + x_east));
         cells = _mm_add_epi8(cells, ne_cells);
         
-        w_cells = _mm_loadu_si128((__m128i*)(row + xwest));
+        w_cells = _mm_loadu_si128((__m128i*)(p_row + x_west));
         cells = _mm_add_epi8(cells, w_cells);
-        e_cells = _mm_loadu_si128((__m128i*)(row + xeast));
+        e_cells = _mm_loadu_si128((__m128i*)(p_row + x_east));
         cells = _mm_add_epi8(cells, e_cells);
 
-        s_cells = _mm_loadu_si128((__m128i*)(rsouth + x));
+        s_cells = _mm_loadu_si128((__m128i*)(p_south + x));
         cells = _mm_add_epi8(cells, s_cells);
-        sw_cells = _mm_loadu_si128((__m128i*)(rsouth + xwest));
+        sw_cells = _mm_loadu_si128((__m128i*)(p_south + x_west));
         cells = _mm_add_epi8(cells, sw_cells);
-        se_cells = _mm_loadu_si128((__m128i*)(rsouth + xeast));
+        se_cells = _mm_loadu_si128((__m128i*)(p_south + x_east));
         cells = _mm_add_epi8(cells, se_cells);
 
-        r_cells = _mm_loadu_si128((__m128i*)(row + x));
+        r_cells = _mm_loadu_si128((__m128i*)(p_row + x));
         cells = cpu_simd_16_alive(cells, r_cells);
-        _mm_storeu_si128((__m128i*)(buf + irow + x), cells);
+        _mm_storeu_si128((__m128i*)(buf + i_row + x), cells);
     }
 
     /* Last vector of every row is a special case because the east neighbors 
@@ -166,31 +166,31 @@ static inline void cpu_simd_16_row_g(char* grid, char* buf, int width,
     shifted one to the west and the last vector element is replaced by the first
     cell in their respective rows. A right shift is done because the system is 
     little endian. */
-    n_cells = _mm_loadu_si128((__m128i*)(rnorth + width - 16));
+    n_cells = _mm_loadu_si128((__m128i*)(p_north + width - 16));
     cells = n_cells;
-    nw_cells = _mm_loadu_si128((__m128i*)(rnorth + width - 17));
+    nw_cells = _mm_loadu_si128((__m128i*)(p_north + width - 17));
     cells = _mm_add_epi8(cells, nw_cells);
     ne_cells = _mm_srli_si128(n_cells, 1);
-    ((char*)&ne_cells)[15] = *rnorth;
+    ((char*)&ne_cells)[15] = *p_north;
     cells = _mm_add_epi8(cells, ne_cells);
     
-    r_cells = _mm_loadu_si128((__m128i*)(row + width - 16));
-    w_cells = _mm_loadu_si128((__m128i*)(row + width - 17));
+    r_cells = _mm_loadu_si128((__m128i*)(p_row + width - 16));
+    w_cells = _mm_loadu_si128((__m128i*)(p_row + width - 17));
     cells = _mm_add_epi8(cells, w_cells);
     e_cells = _mm_srli_si128(r_cells, 1);
-    ((char*)&e_cells)[15] = *row;
+    ((char*)&e_cells)[15] = *p_row;
     cells = _mm_add_epi8(cells, e_cells);
 
-    s_cells = _mm_loadu_si128((__m128i*)(rsouth + width - 16));
+    s_cells = _mm_loadu_si128((__m128i*)(p_south + width - 16));
     cells = _mm_add_epi8(cells, s_cells);
-    sw_cells = _mm_loadu_si128((__m128i*)(rsouth + width - 17));
+    sw_cells = _mm_loadu_si128((__m128i*)(p_south + width - 17));
     cells = _mm_add_epi8(cells, sw_cells);
     se_cells = _mm_srli_si128(s_cells, 1);
-    ((char*)&se_cells)[15] = *rsouth;
+    ((char*)&se_cells)[15] = *p_south;
     cells = _mm_add_epi8(cells, se_cells);
 
     cells = cpu_simd_16_alive(cells, r_cells);
-    _mm_storeu_si128((__m128i*)(buf + irow + width - 16), cells);
+    _mm_storeu_si128((__m128i*)(buf + i_row + width - 16), cells);
 }
 
 /*******************************************************************************
@@ -222,7 +222,7 @@ template <class T>
 static inline T cpu_simd_int_alive(T count, T state)
 {
     return (state | count) & (count >> 1) & ~(count >> 2) & ~(count >> 3) &
-        (T)0x0101010101010101;
+           (T)0x0101010101010101;
 }
 
 /* If a whole row can fit in the specified integer type, simply rotate every row
@@ -232,26 +232,26 @@ static inline T cpu_simd_int_alive(T count, T state)
  * The _e in the function name stands for equal (width == size of integer). */
 template <class T> 
 static inline void cpu_simd_int_row_e(char* grid, char* buf, int width, 
-    int height, int y, int ynorth, int ysouth)
+    int y, int y_north, int y_south)
 {
     int vec_len = sizeof(T);
-    int irow = y * width;
-    int inorth = ynorth * width;
-    int isouth = ysouth * width;
+    int i_row = y * width;
+    int i_north = y_north * width;
+    int i_south = y_south * width;
 
-    T n_cells = *(T*)(grid + inorth);
+    T n_cells = *(T*)(grid + i_north);
     T nw_cells = (n_cells << 8) | (n_cells >> ((vec_len - 1) * 8));
     T ne_cells = (n_cells >> 8) | (n_cells << ((vec_len - 1) * 8));
-    T r_cells = *(T*)(grid + irow);
+    T r_cells = *(T*)(grid + i_row);
     T w_cells = (r_cells << 8) | (r_cells >> ((vec_len - 1) * 8));
     T e_cells = (r_cells >> 8) | (r_cells << ((vec_len - 1) * 8));
-    T s_cells = *(T*)(grid + isouth);
+    T s_cells = *(T*)(grid + i_south);
     T sw_cells = (s_cells << 8) | (s_cells >> ((vec_len - 1) * 8));
     T se_cells = (s_cells >> 8) | (s_cells << ((vec_len - 1) * 8));
     T cells = n_cells + nw_cells + ne_cells + w_cells + e_cells + s_cells + 
               sw_cells + se_cells;
     cells = cpu_simd_int_alive<T>(cells, r_cells);
-    *(T*)(buf + irow) = cells;
+    *(T*)(buf + i_row) = cells;
 }
 
 /* If the width of the grid is larger than the size of the specified integer 
@@ -263,67 +263,67 @@ static inline void cpu_simd_int_row_e(char* grid, char* buf, int width,
  * The _g in the function name stands for greater (width > size of integer). */
 template <class T> 
 static inline void cpu_simd_int_row_g(char* grid, char* buf, int width, 
-    int height, int y, int ynorth, int ysouth)
+    int y, int y_north, int y_south)
 {
     int vec_len = sizeof(T);
-    int irow = y * width;
-    int inorth = ynorth * width;
-    int isouth = ysouth * width;
+    int i_row = y * width;
+    int i_north = y_north * width;
+    int i_south = y_south * width;
 
-    char* rnorth = grid + inorth;
-    char* row = grid + irow;
-    char* rsouth = grid + isouth;
+    char* p_north = grid + i_north;
+    char* p_row = grid + i_row;
+    char* p_south = grid + i_south;
 
     /* First vector of every row is a special case because the west neighbors 
     wrap around. */
-    T n_cells = *(T*)rnorth;
-    T nw_cells = n_cells << 8 | *(rnorth + width - 1);
-    T ne_cells = *(T*)(rnorth + 1);
-    T r_cells = *(T*)row;
-    T w_cells = r_cells << 8 | *(row + width - 1);
-    T e_cells = *(T*)(row + 1);
-    T s_cells = *(T*)rsouth;
-    T sw_cells = s_cells << 8 | *(rsouth + width - 1);
-    T se_cells = *(T*)(rsouth + 1);
+    T n_cells = *(T*)p_north;
+    T nw_cells = n_cells << 8 | *(p_north + width - 1);
+    T ne_cells = *(T*)(p_north + 1);
+    T r_cells = *(T*)p_row;
+    T w_cells = r_cells << 8 | *(p_row + width - 1);
+    T e_cells = *(T*)(p_row + 1);
+    T s_cells = *(T*)p_south;
+    T sw_cells = s_cells << 8 | *(p_south + width - 1);
+    T se_cells = *(T*)(p_south + 1);
     T cells = n_cells + nw_cells + ne_cells + w_cells + e_cells + s_cells + 
               sw_cells + se_cells;
     cells = cpu_simd_int_alive<T>(cells, r_cells);
-    *(T*)(buf + irow) = cells;
+    *(T*)(buf + i_row) = cells;
 
     // Middle vectors
     for (int x = vec_len; x < width - vec_len; x += vec_len) {
-        int xeast = x + 1;
-        int xwest = x - 1;
+        int x_east = x + 1;
+        int x_west = x - 1;
 
-        n_cells = *(T*)(rnorth + x);
-        nw_cells = *(T*)(rnorth + xwest);
-        ne_cells = *(T*)(rnorth + xeast);
-        w_cells = *(T*)(row + xwest);
-        e_cells = *(T*)(row + xeast);
-        s_cells = *(T*)(rsouth + x);
-        sw_cells = *(T*)(rsouth + xwest);
-        se_cells = *(T*)(rsouth + xeast);
+        n_cells = *(T*)(p_north + x);
+        nw_cells = *(T*)(p_north + x_west);
+        ne_cells = *(T*)(p_north + x_east);
+        w_cells = *(T*)(p_row + x_west);
+        e_cells = *(T*)(p_row + x_east);
+        s_cells = *(T*)(p_south + x);
+        sw_cells = *(T*)(p_south + x_west);
+        se_cells = *(T*)(p_south + x_east);
         cells = n_cells + nw_cells + ne_cells + w_cells + e_cells + s_cells + 
                 sw_cells + se_cells;
-        cells = cpu_simd_int_alive<T>(cells, *(T*)(row + x));
-        *(T*)(buf + irow + x) = cells;
+        cells = cpu_simd_int_alive<T>(cells, *(T*)(p_row + x));
+        *(T*)(buf + i_row + x) = cells;
     }
 
     /* Last vector of every row is a special case because the east neighbors 
     wrap around. */
-    n_cells = *(T*)(rnorth + width - vec_len);
-    nw_cells = *(T*)(rnorth + width - vec_len - 1);
-    ne_cells = n_cells >> 8 | ((T)(*rnorth) << ((vec_len - 1) * 8));
-    r_cells = *(T*)(row + width - vec_len);
-    w_cells = *(T*)(row + width - vec_len - 1);
-    e_cells = r_cells >> 8 | ((T)(*row) << ((vec_len - 1) * 8));
-    s_cells = *(T*)(rsouth + width - vec_len);
-    sw_cells = *(T*)(rsouth + width - vec_len - 1);
-    se_cells = s_cells >> 8 | ((T)(*rsouth) << ((vec_len - 1) * 8));
+    n_cells = *(T*)(p_north + width - vec_len);
+    nw_cells = *(T*)(p_north + width - vec_len - 1);
+    ne_cells = n_cells >> 8 | ((T)(*p_north) << ((vec_len - 1) * 8));
+    r_cells = *(T*)(p_row + width - vec_len);
+    w_cells = *(T*)(p_row + width - vec_len - 1);
+    e_cells = r_cells >> 8 | ((T)(*p_row) << ((vec_len - 1) * 8));
+    s_cells = *(T*)(p_south + width - vec_len);
+    sw_cells = *(T*)(p_south + width - vec_len - 1);
+    se_cells = s_cells >> 8 | ((T)(*p_south) << ((vec_len - 1) * 8));
     cells = n_cells + nw_cells + ne_cells + w_cells + e_cells + s_cells + 
             sw_cells + se_cells;
     cells = cpu_simd_int_alive<T>(cells, r_cells);
-    *(T*)(buf + irow + width - vec_len) = cells;
+    *(T*)(buf + i_row + width - vec_len) = cells;
 }
 
 template <class T>
@@ -341,31 +341,27 @@ void life_cpu_simd_int(char* grid, int width, int height, int gens)
     cpu_simd_int_row_e(). */
     if (width == vec_len) {
         for (int i = 0; i < gens; ++i) {
-            cpu_simd_int_row_e<T>(grid, buf, width, height, 0, 
-                height - 1, 1); // First row
+            // First row
+            cpu_simd_int_row_e<T>(grid, buf, width, 0, height - 1, 1); 
             
-            for (int y = 1; y < height - 1; ++y) { // Middle rows
-                cpu_simd_int_row_e<T>(grid, buf, width, height, y, y - 1, 
-                    y + 1);
-            }
+            for (int y = 1; y < height - 1; ++y) // Middle rows
+                cpu_simd_int_row_e<T>(grid, buf, width, y, y - 1, y + 1);
 
-            cpu_simd_int_row_e<T>(grid, buf, width, height, height - 1,
-                height - 2, 0); // Last row
+            // Last row
+            cpu_simd_int_row_e<T>(grid, buf, width, height - 1, height - 2, 0); 
             swap_ptr(char*, grid, buf);
         }
     }
     else {
         for (int i = 0; i < gens; ++i) {
-            cpu_simd_int_row_g<T>(grid, buf, width, height, 0, 
-                height - 1, 1); // First row
+            // First row
+            cpu_simd_int_row_g<T>(grid, buf, width, 0, height - 1, 1); 
 
-            for (int y = 1; y < height - 1; ++y) { // Middle rows
-                cpu_simd_int_row_g<T>(grid, buf, width, height, y, 
-                    y - 1, y + 1);
-            }
+            for (int y = 1; y < height - 1; ++y) // Middle rows
+                cpu_simd_int_row_g<T>(grid, buf, width, y, y - 1, y + 1);
 
-            cpu_simd_int_row_g<T>(grid, buf, width, height, height - 1,
-                height - 2, 0); // Last row
+            // Last row
+            cpu_simd_int_row_g<T>(grid, buf, width, height - 1, height - 2, 0); 
             swap_ptr(char*, grid, buf);
         }
     }

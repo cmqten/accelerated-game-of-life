@@ -39,15 +39,14 @@ static void life_cpu_omp_simd_16(char* grid, int width, int height, int gens)
         shared(width, height, gens, rows_per_thread) firstprivate(grid, buf)
         {
             int tid = omp_get_thread_num();
-            int start_y = tid * rows_per_thread;
-            int end_y = start_y + rows_per_thread;
+            int y_start = tid * rows_per_thread;
+            int y_end = y_start + rows_per_thread;
 
             for (int i = 0; i < gens; ++i) {
-                for (int y = start_y; y < end_y && y < height; ++y) {
-                    int ynorth = y ? y - 1 : height - 1;
-                    int ysouth = y == height - 1 ? 0 : y + 1;
-                    cpu_simd_16_row_e(grid, buf, width, height, y, ynorth, 
-                        ysouth);
+                for (int y = y_start; y < y_end && y < height; ++y) {
+                    int y_north = y ? y - 1 : height - 1;
+                    int y_south = y == height - 1 ? 0 : y + 1;
+                    cpu_simd_16_row_e(grid, buf, width, y, y_north, y_south);
                 }
                 swap_ptr(char*, grid, buf);
                 #pragma omp barrier
@@ -59,15 +58,14 @@ static void life_cpu_omp_simd_16(char* grid, int width, int height, int gens)
         shared(width, height, gens, rows_per_thread) firstprivate(grid, buf)
         {
             int tid = omp_get_thread_num();
-            int start_y = tid * rows_per_thread;
-            int end_y = start_y + rows_per_thread;
+            int y_start = tid * rows_per_thread;
+            int y_end = y_start + rows_per_thread;
 
             for (int i = 0; i < gens; ++i) {
-                for (int y = start_y; y < end_y && y < height; ++y) {
-                    int ynorth = y ? y - 1 : height - 1;
-                    int ysouth = y == height - 1 ? 0 : y + 1;
-                    cpu_simd_16_row_g(grid, buf, width, height, y, ynorth, 
-                        ysouth);
+                for (int y = y_start; y < y_end && y < height; ++y) {
+                    int y_north = y ? y - 1 : height - 1;
+                    int y_south = y == height - 1 ? 0 : y + 1;
+                    cpu_simd_16_row_g(grid, buf, width, y, y_north, y_south);
                 }
                 swap_ptr(char*, grid, buf);
                 #pragma omp barrier
@@ -110,15 +108,15 @@ static void life_cpu_omp_simd_int(char* grid, int width, int height, int gens)
         shared(width, height, gens, rows_per_thread) firstprivate(grid, buf)
         {
             int tid = omp_get_thread_num();
-            int start_y = tid * rows_per_thread;
-            int end_y = start_y + rows_per_thread;
+            int y_start = tid * rows_per_thread;
+            int y_end = y_start + rows_per_thread;
 
             for (int i = 0; i < gens; ++i) {
-                for (int y = start_y; y < end_y && y < height; ++y) {
-                    int ynorth = y ? y - 1 : height - 1;
-                    int ysouth = y == height - 1 ? 0 : y + 1;
-                    cpu_simd_int_row_e<T>(grid, buf, width, height, y, ynorth, 
-                        ysouth);
+                for (int y = y_start; y < y_end && y < height; ++y) {
+                    int y_north = y ? y - 1 : height - 1;
+                    int y_south = y == height - 1 ? 0 : y + 1;
+                    cpu_simd_int_row_e<T>(grid, buf, width, y, y_north,
+                        y_south);
                 }
                 swap_ptr(char*, grid, buf);
                 #pragma omp barrier
@@ -130,15 +128,15 @@ static void life_cpu_omp_simd_int(char* grid, int width, int height, int gens)
         shared(width, height, gens, rows_per_thread) firstprivate(grid, buf)
         {
             int tid = omp_get_thread_num();
-            int start_y = tid * rows_per_thread;
-            int end_y = start_y + rows_per_thread;
+            int y_start = tid * rows_per_thread;
+            int y_end = y_start + rows_per_thread;
 
             for (int i = 0; i < gens; ++i) {
-                for (int y = start_y; y < end_y && y < height; ++y) {
-                    int ynorth = y ? y - 1 : height - 1;
-                    int ysouth = y == height - 1 ? 0 : y + 1;
-                    cpu_simd_int_row_g<T>(grid, buf, width, height, y, ynorth, 
-                        ysouth);
+                for (int y = y_start; y < y_end && y < height; ++y) {
+                    int y_north = y ? y - 1 : height - 1;
+                    int y_south = y == height - 1 ? 0 : y + 1;
+                    cpu_simd_int_row_g<T>(grid, buf, width, y, y_north,
+                        y_south);
                 }
                 swap_ptr(char*, grid, buf);
                 #pragma omp barrier

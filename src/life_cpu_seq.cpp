@@ -12,35 +12,36 @@
 
 /* Simulates the cells in row y for one generation. The input is grid and the 
  * output is buf. */
-static inline void cpu_seq_row(char* grid, char* buf, int width, int height, 
-    int y, int ynorth, int ysouth)
+static inline void cpu_seq_row(char* grid, char* buf, int width, int y, 
+    int ynorth, int ysouth)
 {
-    int irow = y * width;
-    int inorth = ynorth * width;
-    int isouth = ysouth * width;
+    int i_row = y * width;
+    int i_north = ynorth * width;
+    int i_south = ysouth * width;
 
     /* First cell of every row is a special case because the west neighbors wrap
     around. */ 
     int x = 0;
-    int idx = irow;
-    int xwest = width - 1;
-    int xeast = 1;
-    char cell = grid[inorth + xwest] + grid[inorth] + grid[inorth + xeast] + 
-                grid[irow + xwest] + grid[irow + xeast] + 
-                grid[isouth + xwest] + grid[isouth] + grid[isouth + xeast];
-    cell = (cell == 3) | ((cell == 2) & grid[irow]);
-    buf[irow] = cell;
+    int idx = i_row;
+    int x_west = width - 1;
+    int x_east = 1;
+    char cell = grid[i_north + x_west] + grid[i_north] + 
+                grid[i_north + x_east] + grid[i_row + x_west] + 
+                grid[i_row + x_east] + grid[i_south + x_west] + 
+                grid[i_south] + grid[i_south + x_east];
+    cell = (cell == 3) | ((cell == 2) & grid[i_row]);
+    buf[i_row] = cell;
     
     /* Middle cells are handled as expected, west and east neighbors are one 
     less and one more than the row index, respectively. */
     for (x = 1; x < width - 1; ++x) {
-        idx = irow + x;
-        xwest = x - 1;
-        xeast = x + 1;
-        cell = grid[inorth + xwest] + grid[inorth + x] + 
-               grid[inorth + xeast] + grid[irow + xwest] + 
-               grid[irow + xeast] + grid[isouth + xwest] + 
-               grid[isouth + x] + grid[isouth + xeast];
+        idx = i_row + x;
+        x_west = x - 1;
+        x_east = x + 1;
+        cell = grid[i_north + x_west] + grid[i_north + x] + 
+               grid[i_north + x_east] + grid[i_row + x_west] + 
+               grid[i_row + x_east] + grid[i_south + x_west] + 
+               grid[i_south + x] + grid[i_south + x_east];
         cell = (cell == 3) | ((cell == 2) & grid[idx]);
         buf[idx] = cell;
     }
@@ -48,12 +49,12 @@ static inline void cpu_seq_row(char* grid, char* buf, int width, int height,
     /* Last cell of every row is a special case because the east neighbors wrap
     around. */
     x = width - 1;
-    idx = irow + x;
-    xwest = width - 2;
-    xeast = 0;
-    cell = grid[inorth + xwest] + grid[inorth + x] + grid[inorth + xeast] + 
-           grid[irow + xwest] + grid[irow + xeast] + grid[isouth + xwest] +
-           grid[isouth + x] + grid[isouth + xeast];
+    idx = i_row + x;
+    x_west = width - 2;
+    x_east = 0;
+    cell = grid[i_north + x_west] + grid[i_north + x] + grid[i_north + x_east] + 
+           grid[i_row + x_west] + grid[i_row + x_east] + 
+           grid[i_south + x_west] + grid[i_south + x] + grid[i_south + x_east];
     cell = (cell == 3) | ((cell == 2) & grid[idx]);
     buf[idx] = cell;
 }
@@ -68,13 +69,12 @@ void life_cpu_seq(char* grid, int width, int height, int gens)
     prevents having to do a conditional check every iteration, which has 
     significant overhead. */
     for (int i = 0; i < gens; ++i) {
-        cpu_seq_row(grid, buf, width, height, 0, height - 1, 1); // First row
+        cpu_seq_row(grid, buf, width, 0, height - 1, 1); // First row
 
         for (int y = 1; y < height - 1; ++y) // Middle rows
-            cpu_seq_row(grid, buf, width, height, y, y - 1, y + 1);
+            cpu_seq_row(grid, buf, width, y, y - 1, y + 1);
 
-        // Last row
-        cpu_seq_row(grid, buf, width, height, height - 1, height - 2, 0);
+        cpu_seq_row(grid, buf, width, height - 1, height - 2, 0); // Last row
         swap_ptr(char*, grid, buf);
     }
 

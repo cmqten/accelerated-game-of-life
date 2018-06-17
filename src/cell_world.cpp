@@ -43,7 +43,7 @@ cell_world cell_world::create_from_buffer(char* buf, int width, int height,
 cell_world cell_world::create_from_existing(const cell_world& other) 
 {
     return cell_world::create_from_buffer(other.grid, other.width, other.height,
-        other.lifesim);
+           other.lifesim);
 }
 
 /* The file must be a plain pbm file with the specified format in the header
@@ -109,8 +109,8 @@ cell_world::~cell_world()
 
 bool cell_world::operator==(const cell_world& other) const
 {
-    return width == other.width && height == other.height && size == other.size
-        && !memcmp(grid, other.grid, size);
+    return width == other.width && height == other.height && 
+           size == other.size && !memcmp(grid, other.grid, size);
 }
 
 bool cell_world::operator!=(const cell_world& other) const

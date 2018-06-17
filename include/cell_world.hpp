@@ -56,7 +56,7 @@
 
 #include <functional>
 #include <string>
-#include "util.hpp"
+#include <util.hpp>
 
 /* Minimum dimension is 3 so that every cell has at least 8 neighbors and 
 maximum dimension is 16384 to prevent the system from running out of memory. */

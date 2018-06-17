@@ -1,3 +1,12 @@
+/**
+ * life_ocl_kernel.cl
+ *
+ * Simulates Conway's Game of Life on a GPU using OpenCL. Handles the case 
+ * where each row is strictly larger than the vector length.
+ * 
+ * Author: Carl Marquez
+ * Created on: June 16, 2018
+ */
 #if defined VECLEN
 
 #if VECLEN == 2
@@ -52,8 +61,7 @@
 
 inline T alive(T count, T state)
 {
-    return ((count == (T)(3)) | ((count == (T)(2)) & state)) & 
-        (T)(1);
+    return ((count == (T)(3)) | ((count == (T)(2)) & state)) & (T)(1);
 }
 
 kernel void life_kernel(global char* grid, global char* buf, int width,
@@ -61,136 +69,119 @@ kernel void life_kernel(global char* grid, global char* buf, int width,
 {
     int x_start = get_global_id(0) * VECLEN;
     int y_start = get_global_id(1);
-    int w_width = get_global_size(0);
-    int w_height = get_global_size(1);
-    int stride = w_width * VECLEN;
+    int group_width = get_global_size(0);
+    int group_height = get_global_size(1);
+    int stride = group_width * VECLEN;
 
     if (x_start == 0) {
-        for (int y = y_start; y < height; y += w_height) {
-            int ynorth = y ? y - 1 : height - 1;
-            int ysouth = y == (height - 1) ? 0 : y + 1;
-            int irow = y * width;
-            int inorth = ynorth * width;
-            int isouth = ysouth * width;
+        for (int y = y_start; y < height; y += group_height) {
+            int y_north = y ? y - 1 : height - 1;
+            int y_south = y == (height - 1) ? 0 : y + 1;
+            int i_row = y * width;
+            int i_north = y_north * width;
+            int i_south = y_south * width;
 
-            global char* rnorth = grid + inorth;
-            global char* row = grid + irow;
-            global char* rsouth = grid + isouth; 
+            global char* p_north = grid + i_north;
+            global char* p_row = grid + i_row;
+            global char* p_south = grid + i_south; 
 
             // Do the first vector
-            T n_cells = vloadn(0, rnorth);
-            T ne_cells = shuffle2(n_cells, (T)(*(rnorth + VECLEN)),
-                e_mask);
-            T nw_cells = shuffle2((T)(*(rnorth + width - 1)), n_cells, 
-                w_mask);
+            T n_cells = vloadn(0, p_north);
+            T ne_cells = shuffle2(n_cells, (T)(*(p_north + VECLEN)), e_mask);
+            T nw_cells = shuffle2((T)(*(p_north + width - 1)), n_cells, w_mask);
 
-            T cells = vloadn(0, row);
-            T e_cells = shuffle2(cells, (T)(*(row + VECLEN)),
-                e_mask);
-            T w_cells = shuffle2((T)(*(row + width - 1)), cells, 
-                w_mask);
+            T cells = vloadn(0, p_row);
+            T e_cells = shuffle2(cells, (T)(*(p_row + VECLEN)), e_mask);
+            T w_cells = shuffle2((T)(*(p_row + width - 1)), cells, w_mask);
 
-            T s_cells = vloadn(0, rsouth);
-            T se_cells = shuffle2(s_cells, (T)(*(rsouth + VECLEN)),
-                e_mask);
-            T sw_cells = shuffle2((T)(*(rsouth + width - 1)), s_cells, 
-                w_mask);
+            T s_cells = vloadn(0, p_south);
+            T se_cells = shuffle2(s_cells, (T)(*(p_south + VECLEN)), e_mask);
+            T sw_cells = shuffle2((T)(*(p_south + width - 1)), s_cells, w_mask);
 
             vstoren(alive(
                 n_cells + ne_cells + nw_cells + e_cells + w_cells + 
                 s_cells + se_cells + sw_cells, cells 
-            ), 0, buf + irow);
+            ), 0, buf + i_row);
 
             // Do the middle vectors
             for (int x = stride; x < width - VECLEN; x += stride) {
                 int xwest = x - 1;
 
-                n_cells = vloadn(0, rnorth + x);
-                ne_cells = shuffle2(n_cells, (T)(*(rnorth + x + VECLEN)),
-                    e_mask);
-                nw_cells = shuffle2((T)(*(rnorth + xwest)), n_cells, 
-                    w_mask);
+                n_cells = vloadn(0, p_north + x);
+                ne_cells = shuffle2(n_cells, (T)(*(p_north + x + VECLEN)), 
+                           e_mask);
+                nw_cells = shuffle2((T)(*(p_north + xwest)), n_cells, w_mask);
 
-                cells = vloadn(0, row + x);
-                e_cells = shuffle2(cells, (T)(*(row + x + VECLEN)),
-                    e_mask);
-                w_cells = shuffle2((T)(*(row + xwest)), cells, 
-                    w_mask);
+                cells = vloadn(0, p_row + x);
+                e_cells = shuffle2(cells, (T)(*(p_row + x + VECLEN)), e_mask);
+                w_cells = shuffle2((T)(*(p_row + xwest)), cells, w_mask);
 
-                s_cells = vloadn(0, rsouth + x);
-                se_cells = shuffle2(s_cells, (T)(*(rsouth + x + VECLEN)),
-                    e_mask);
-                sw_cells = shuffle2((T)(*(rsouth + xwest)), s_cells, 
-                    w_mask);
+                s_cells = vloadn(0, p_south + x);
+                se_cells = shuffle2(s_cells, (T)(*(p_south + x + VECLEN)),
+                           e_mask);
+                sw_cells = shuffle2((T)(*(p_south + xwest)), s_cells, w_mask);
 
                 vstoren(alive(
                     n_cells + ne_cells + nw_cells + e_cells + w_cells + 
                     s_cells + se_cells + sw_cells, cells 
-                ), 0, buf + irow + x);
+                ), 0, buf + i_row + x);
             }
 
             // Do the last vector
-            n_cells = vloadn(0, rnorth + width - VECLEN);
-            nw_cells = shuffle2((T)(*(rnorth + width - VECLEN - 1)),
-                n_cells, w_mask);
-            ne_cells = shuffle2(n_cells, (T)(*rnorth), 
-                e_mask);
+            n_cells = vloadn(0, p_north + width - VECLEN);
+            nw_cells = shuffle2((T)(*(p_north + width - VECLEN - 1)), n_cells, 
+                       w_mask);
+            ne_cells = shuffle2(n_cells, (T)(*p_north), e_mask);
 
-            cells = vloadn(0, row + width - VECLEN);
-            w_cells = shuffle2((T)(*(row + width - VECLEN - 1)), cells, 
-                w_mask);
-            e_cells = shuffle2(cells, (T)(*row), 
-                e_mask);
+            cells = vloadn(0, p_row + width - VECLEN);
+            w_cells = shuffle2((T)(*(p_row + width - VECLEN - 1)), cells, 
+                      w_mask);
+            e_cells = shuffle2(cells, (T)(*p_row), e_mask);
 
-            s_cells = vloadn(0, rsouth + width - VECLEN);
-            sw_cells = shuffle2((T)(*(rsouth + width - VECLEN - 1)),
-                s_cells, w_mask);
-            se_cells = shuffle2(s_cells, (T)(*rsouth), 
-                e_mask);
+            s_cells = vloadn(0, p_south + width - VECLEN);
+            sw_cells = shuffle2((T)(*(p_south + width - VECLEN - 1)), s_cells, 
+                       w_mask);
+            se_cells = shuffle2(s_cells, (T)(*p_south), e_mask);
 
             vstoren(alive(
                 n_cells + ne_cells + nw_cells + e_cells + w_cells + 
                 s_cells + se_cells + sw_cells, cells 
-            ), 0, buf + irow + width - VECLEN);
+            ), 0, buf + i_row + width - VECLEN);
         }
     }
     else {
-        for (int y = y_start; y < height; y += w_height) {
-            int ynorth = y ? y - 1 : height - 1;
-            int ysouth = y == (height - 1) ? 0 : y + 1;
-            int irow = y * width;
-            int inorth = ynorth * width;
-            int isouth = ysouth * width;
+        for (int y = y_start; y < height; y += group_height) {
+            int y_north = y ? y - 1 : height - 1;
+            int y_south = y == (height - 1) ? 0 : y + 1;
+            int i_row = y * width;
+            int i_north = y_north * width;
+            int i_south = y_south * width;
 
-            global char* rnorth = grid + inorth;
-            global char* row = grid + irow;
-            global char* rsouth = grid + isouth;
+            global char* p_north = grid + i_north;
+            global char* p_row = grid + i_row;
+            global char* p_south = grid + i_south;
             
             for (int x = x_start; x < width - VECLEN; x += stride) {
                 int xwest = x - 1;
                 
-                T n_cells = vloadn(0, rnorth + x);
-                T ne_cells = shuffle2(n_cells, (T)(*(rnorth + x + 
-                    VECLEN)), e_mask);
-                T nw_cells = shuffle2((T)(*(rnorth + xwest)), n_cells, 
-                    w_mask);
+                T n_cells = vloadn(0, p_north + x);
+                T ne_cells = shuffle2(n_cells, (T)(*(p_north + x +  VECLEN)), 
+                             e_mask);
+                T nw_cells = shuffle2((T)(*(p_north + xwest)), n_cells, w_mask);
 
-                T cells = vloadn(0, row + x);
-                T e_cells = shuffle2(cells, (T)(*(row + x + VECLEN)),
-                    e_mask);
-                T w_cells = shuffle2((T)(*(row + xwest)), cells, 
-                    w_mask);
+                T cells = vloadn(0, p_row + x);
+                T e_cells = shuffle2(cells, (T)(*(p_row + x + VECLEN)), e_mask);
+                T w_cells = shuffle2((T)(*(p_row + xwest)), cells, w_mask);
 
-                T s_cells = vloadn(0, rsouth + x);
-                T se_cells = shuffle2(s_cells, (T)(*(rsouth + x + 
-                    VECLEN)), e_mask);
-                T sw_cells = shuffle2((T)(*(rsouth + xwest)), s_cells, 
-                    w_mask);
+                T s_cells = vloadn(0, p_south + x);
+                T se_cells = shuffle2(s_cells, (T)(*(p_south + x + VECLEN)), 
+                             e_mask);
+                T sw_cells = shuffle2((T)(*(p_south + xwest)), s_cells, w_mask);
 
                 vstoren(alive(
                     n_cells + ne_cells + nw_cells + e_cells + w_cells + 
                     s_cells + se_cells + sw_cells, cells 
-                ), 0, buf + irow + x);
+                ), 0, buf + i_row + x);
             }
         }
     }

@@ -1,11 +1,39 @@
+/**
+ * life_gpu_ocl.cpp
+ *
+ * Simulates Conway's Game of Life on a GPU using OpenCL. This simply decides 
+ * which kernel to dispatch and how big the global and local workgroup sizes 
+ * should be. The kernel does all the calculations.
+ * 
+ * Author: Carl Marquez
+ * Created on: May 26, 2018
+ */
 #include <CL/cl.hpp>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <life.hpp>
 #include <util.hpp>
 
+extern char* path;
+
 void life_gpu_ocl(char* grid, int width, int height, int gens)
 {
+    int vec_len = 2;
+    std::string source_path(std::filesystem::path(path).parent_path().c_str());
+    source_path += "/kernels/";
+    if (width == 16 || width == 8 || width == 4) {
+        source_path += "life_ocl_kernel_e.cl";
+        vec_len = width;
+    }
+    else {
+        source_path += "life_ocl_kernel.cl";
+        if (width > 16) vec_len = 16;
+        else if (width > 8) vec_len = 8;
+        else if (width > 4) vec_len = 4;
+        else vec_len = 2;
+    }
+
     // Get default device
     cl_int err;
     cl::Device device = cl::Device::getDefault(&err);
@@ -14,8 +42,6 @@ void life_gpu_ocl(char* grid, int width, int height, int gens)
     // Create context
     cl::Context context({device});
 
-    // Build source
-    std::string source_path = "kernels/life_ocl_kernel.cl";
     std::ifstream source_file(source_path);
     std::string source_code(std::istreambuf_iterator<char>(source_file),
         (std::istreambuf_iterator<char>()));
@@ -23,7 +49,8 @@ void life_gpu_ocl(char* grid, int width, int height, int gens)
     cl::Program::Sources sources;
     sources.push_back({source_code.c_str(), source_code.length()});
     cl::Program program(context, sources);
-    err = program.build({device}, "-DVECLEN=8");
+    std::string compile_flags = "-DVECLEN=" + std::to_string(vec_len);
+    err = program.build({device}, compile_flags.c_str());
     throw_false<std::runtime_error>(err == CL_SUCCESS,
         "OpenCL build error " + std::to_string(err) + "\n" + 
         program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device) + "\n");
