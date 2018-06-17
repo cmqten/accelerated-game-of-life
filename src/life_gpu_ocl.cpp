@@ -15,7 +15,7 @@ void life_gpu_ocl(char* grid, int width, int height, int gens)
     cl::Context context({device});
 
     // Build source
-    std::string source_path = "kernels/life_ocl_kernel_8.cl";
+    std::string source_path = "kernels/life_ocl_kernel.cl";
     std::ifstream source_file(source_path);
     std::string source_code(std::istreambuf_iterator<char>(source_file),
         (std::istreambuf_iterator<char>()));
@@ -23,7 +23,7 @@ void life_gpu_ocl(char* grid, int width, int height, int gens)
     cl::Program::Sources sources;
     sources.push_back({source_code.c_str(), source_code.length()});
     cl::Program program(context, sources);
-    err = program.build({device});
+    err = program.build({device}, "-DVECLEN=8");
     throw_false<std::runtime_error>(err == CL_SUCCESS,
         "OpenCL build error " + std::to_string(err) + "\n" + 
         program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device) + "\n");
