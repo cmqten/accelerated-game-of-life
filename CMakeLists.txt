@@ -14,6 +14,8 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O2 -funroll-loops -funswitch-loops")
 
 include_directories(./include)
+link_directories($ENV{OCLDIR})
+
 file(GLOB SOURCES "${SRC_DIR}/*.cpp")
 add_custom_target(link_kernels ALL ln -s -f ${KERNELS_DIR} 
                   ${CMAKE_CURRENT_BINARY_DIR})           
