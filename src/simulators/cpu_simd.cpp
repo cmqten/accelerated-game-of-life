@@ -34,7 +34,7 @@ void cpu_simd_16(char* grid, int width, int height, int gens)
                 cpu_simd_16_row_16w(grid, buf, y, y - 1, y + 1);
             }
             cpu_simd_16_row_16w(grid, buf, height - 1, height - 2, 0); 
-            swap_ptr(char*, grid, buf);
+            swap_ptr((void**)&grid, (void**)&buf);
         }
     }
     else {
@@ -46,13 +46,13 @@ void cpu_simd_16(char* grid, int width, int height, int gens)
                 cpu_simd_16_row(grid, buf, width, y, y - 1, y + 1);
             }
             cpu_simd_16_row(grid, buf, width, height - 1, height - 2, 0); 
-            swap_ptr(char*, grid, buf);
+            swap_ptr((void**)&grid, (void**)&buf);
         }
     }
 
     // If number of generations is odd, the result is in buf, so swap with grid. 
     if (gens % 2) { 
-        swap_ptr(char*, grid, buf);
+        swap_ptr((void**)&grid, (void**)&buf);
         memcpy(grid, buf, size);
     }
     delete[] buf;

@@ -86,7 +86,7 @@ static void benchmark(int width, int height, int percent_alive, int gens)
     printf("+-----------------------------------------+\n");
     printf("| Simulator      | Compute (ms) | Speedup |\n");
     printf("|-------------------------------|---------|\n");
-    printf("| CPU Sequential | %12.2f | %6.2fx |\n", seq_time, 1);
+    printf("| CPU Sequential | %12.2f | %6.2fx |\n", seq_time, 1.0);
     printf("| CPU SIMD 1T    | %12.2f | %6.2fx |\n", simd_time, seq_time / simd_time);
     printf("| CPU OpenMP     | %12.2f | %6.2fx |\n", omp_time, seq_time / omp_time);
     printf("+-----------------------------------------+\n\n");

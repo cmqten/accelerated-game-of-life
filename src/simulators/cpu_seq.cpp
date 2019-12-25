@@ -68,12 +68,12 @@ void cpu_seq(char* grid, int width, int height, int gens)
             cpu_seq_row(grid, buf, width, y, y - 1, y + 1);
         }
         cpu_seq_row(grid, buf, width, height - 1, height - 2, 0);
-        swap_ptr(char*, grid, buf);
+        swap_ptr((void**)&grid, (void**)&buf);
     }
 
     // If number of generations is odd, the result is in buf, so swap with grid. 
     if (gens % 2) { 
-        swap_ptr(char*, buf, grid);
+        swap_ptr((void**)&grid, (void**)&buf);
         memcpy(grid, buf, size);
     }
     delete[] buf; 

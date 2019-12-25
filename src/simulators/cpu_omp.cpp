@@ -47,7 +47,7 @@ static void cpu_omp_simd_16(char* grid, int width, int height, int gens, int thr
                     int y_south = y == height - 1 ? 0 : y + 1;
                     cpu_simd_16_row_16w(grid, buf, y, y_north, y_south);
                 }
-                swap_ptr(char*, grid, buf);
+                swap_ptr((void**)&grid, (void**)&buf);
                 #pragma omp barrier
             }
         }
@@ -66,7 +66,7 @@ static void cpu_omp_simd_16(char* grid, int width, int height, int gens, int thr
                     int y_south = y == height - 1 ? 0 : y + 1;
                     cpu_simd_16_row(grid, buf, width, y, y_north, y_south);
                 }
-                swap_ptr(char*, grid, buf);
+                swap_ptr((void**)&grid, (void**)&buf);
                 #pragma omp barrier
             }
         }
@@ -116,7 +116,7 @@ static void cpu_omp_simd_int(char* grid, int width, int height, int gens, int th
                     int y_south = y == height - 1 ? 0 : y + 1;
                     cpu_simd_int_row_intw<T>(grid, buf, y, y_north, y_south);
                 }
-                swap_ptr(char*, grid, buf);
+                swap_ptr((void**)&grid, (void**)&buf);
                 #pragma omp barrier
             }
         }
@@ -135,7 +135,7 @@ static void cpu_omp_simd_int(char* grid, int width, int height, int gens, int th
                     int y_south = y == height - 1 ? 0 : y + 1;
                     cpu_simd_int_row<T>(grid, buf, width, y, y_north, y_south);
                 }
-                swap_ptr(char*, grid, buf);
+                swap_ptr((void**)&grid, (void**)&buf);
                 #pragma omp barrier
             }
         }

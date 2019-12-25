@@ -12,13 +12,6 @@
 #include <chrono>
 #include <cstdint>
 
-#define swap_ptr(t, a, b) \
-{ \
-    a = (t)((uintptr_t)a ^ (uintptr_t)b); \
-    b = (t)((uintptr_t)a ^ (uintptr_t)b); \
-    a = (t)((uintptr_t)a ^ (uintptr_t)b); \
-}
-
 class my_timer
 {
 private:
@@ -47,5 +40,12 @@ public:
         return -1.0;
     };
 };
+
+static inline void swap_ptr(void** a, void** b)
+{
+    void* temp = *a;
+    *a = *b;
+    *b = temp;
+}
 
 #endif
