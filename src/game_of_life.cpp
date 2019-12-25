@@ -25,7 +25,7 @@ const int max_dim = 16384;
 const std::string min_dim_str = std::to_string(min_dim);
 const std::string max_dim_str = std::to_string(max_dim);
 
-/* Generate a random world. */
+/* Generates a random world. */
 char* generate_random_world(int width, int height, int percent_alive)
 {
     if (percent_alive < 0 || percent_alive > 100) {
@@ -52,6 +52,15 @@ char* generate_random_world(int width, int height, int percent_alive)
     return world;
 }
 
+/* Simulates game of life on CPU and returns the runtime in ms. */
+double run_game_of_life_cpu(cpu_sim_t func, char* world, int width, int height, int gens)
+{
+    my_timer timer;
+    timer.start();
+    func(world, width, height, gens);
+    return timer.stop();
+}
+
 static void benchmark(int width, int height, int percent_alive, int gens)
 {
     int size = width * height;
@@ -67,36 +76,26 @@ static void benchmark(int width, int height, int percent_alive, int gens)
 
     // Simulate every copy of the world for the same number generations on
     // different simulators. The result must be the same for all.
-    my_timer timer;
-    timer.start();
-    cpu_seq(world_seq.get(), width, height, gens);
-    double seq_time = timer.stop();
+    double seq_time = run_game_of_life_cpu(cpu_seq, world_seq.get(), width, height, gens);
+    double simd_time = run_game_of_life_cpu(cpu_simd, world_simd.get(), width, height, gens);
+    double omp_time = run_game_of_life_cpu(cpu_omp, world_omp.get(), width, height, gens);
 
-    timer.start();
-    cpu_simd(world_simd.get(), width, height, gens);
-    double simd_time = timer.stop();
-
-    timer.start();
-    cpu_omp(world_omp.get(), width, height, gens);
-    double omp_time = timer.stop();
-
-    std::cout << width << " x " << height << std::endl;
-    printf("+------------------------------+\n");
-    printf("| Implementation | Runtime (s) |\n");
-    printf("|------------------------------|\n");
-    printf("| CPU Sequential | %11.2f |\n", seq_time);
-    printf("| CPU SIMD 1T    | %11.2f |\n", simd_time);
-    printf("| CPU OpenMP     | %11.2f |\n", omp_time);
-    printf("+------------------------------+\n\n");
+    // Print runtimes
+    std::cout << "Size: " << width << " x " << height << std::endl;
+    std::cout << "Generations: " << gens << std::endl;
+    printf("+-----------------------------------------+\n");
+    printf("| Simulator      | Compute (ms) | Speedup |\n");
+    printf("|-------------------------------|---------|\n");
+    printf("| CPU Sequential | %12.2f | %6.2fx |\n", seq_time, 1);
+    printf("| CPU SIMD 1T    | %12.2f | %6.2fx |\n", simd_time, seq_time / simd_time);
+    printf("| CPU OpenMP     | %12.2f | %6.2fx |\n", omp_time, seq_time / omp_time);
+    printf("+-----------------------------------------+\n\n");
 
     if (memcmp(world_seq.get(), world_simd.get(), size)) {
-        std::cout << "CPU SIMD is not equal to the reference implementation" << std::endl;
+        std::cerr << "CPU SIMD is not equal to the reference implementation" << std::endl;
     }
     else if (memcmp(world_seq.get(), world_omp.get(), size)) {
-        std::cout << "CPU OpenMP is not equal to the reference implementation" << std::endl;
-    }
-    else {
-        std::cout << "All implementations are equal" << std::endl;
+        std::cerr << "CPU OpenMP is not equal to the reference implementation" << std::endl;
     }
 }
 

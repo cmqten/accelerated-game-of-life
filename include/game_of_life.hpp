@@ -10,6 +10,8 @@
 #ifndef __GAME_OF_LIFE_HPP__
 #define __GAME_OF_LIFE_HPP__
 
+typedef void (*cpu_sim_t)(char*, int, int, int);
+
 /* CPU sequential */
 void cpu_seq(char* grid, int width, int height, int gens);
 

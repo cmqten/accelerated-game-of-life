@@ -41,8 +41,8 @@ public:
         if (_started) {
             _started = false;
             auto end = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double> seconds = end - _start;
-            return seconds.count();
+            std::chrono::duration<double, std::milli> ms = end - _start;
+            return ms.count();
         }
         return -1.0;
     };
