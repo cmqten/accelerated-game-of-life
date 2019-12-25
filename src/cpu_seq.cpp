@@ -7,20 +7,18 @@
  * Created on: May 5, 2018
  */
 #include <cstring>
-#include <life.hpp>
+
+#include <game_of_life.hpp>
 #include <util.hpp>
 
-/* Simulates the cells in row y for one generation. The input is grid and the 
- * output is buf. */
-static inline void cpu_seq_row(char* grid, char* buf, int width, int y, 
-    int ynorth, int ysouth)
+/* Processes cells in a row. */
+static inline void cpu_seq_row(char* grid, char* buf, int width, int y, int ynorth, int ysouth)
 {
     int i_row = y * width;
     int i_north = ynorth * width;
     int i_south = ysouth * width;
 
-    /* First cell of every row is a special case because the west neighbors wrap
-    around. */ 
+    // First cell is a special case because the west neighbors wrap around. 
     int x = 0;
     int idx = i_row;
     int x_west = width - 1;
@@ -32,9 +30,8 @@ static inline void cpu_seq_row(char* grid, char* buf, int width, int y,
     cell = (cell == 3) | ((cell == 2) & grid[i_row]);
     buf[i_row] = cell;
     
-    /* Middle cells are handled as expected, west and east neighbors are one 
-    less and one more than the row index, respectively. */
-    for (x = 1; x < width - 1; ++x) {
+    // Middle cells
+    for (x = 1; x < width - 1; x++) {
         idx = i_row + x;
         x_west = x - 1;
         x_east = x + 1;
@@ -46,8 +43,7 @@ static inline void cpu_seq_row(char* grid, char* buf, int width, int y,
         buf[idx] = cell;
     }
 
-    /* Last cell of every row is a special case because the east neighbors wrap
-    around. */
+    // Last cell is a special case because the east neighbors wrap around.
     x = width - 1;
     idx = i_row + x;
     x_west = width - 2;
@@ -59,30 +55,25 @@ static inline void cpu_seq_row(char* grid, char* buf, int width, int y,
     buf[idx] = cell;
 }
 
-void life_cpu_seq(char* grid, int width, int height, int gens)
+void cpu_seq(char* grid, int width, int height, int gens)
 {
     int size = width * height;
     char* buf = new char[size];
     
-    /* To optimize performance, the first and last rows are handled separately
-    from the rest of the rows because some of their neighbors wrap around. This
-    prevents having to do a conditional check every iteration, which has 
-    significant overhead. */
-    for (int i = 0; i < gens; ++i) {
-        cpu_seq_row(grid, buf, width, 0, height - 1, 1); // First row
-
-        for (int y = 1; y < height - 1; ++y) // Middle rows
+    for (int i = 0; i < gens; i++) {
+        // First and last rows are outside of the loop to not have to check
+        // for north and south neighbor bounds.
+        cpu_seq_row(grid, buf, width, 0, height - 1, 1);
+        for (int y = 1; y < height - 1; y++) {
             cpu_seq_row(grid, buf, width, y, y - 1, y + 1);
-
-        cpu_seq_row(grid, buf, width, height - 1, height - 2, 0); // Last row
-        swap_ptr(char*, grid, buf);
+        }
+        cpu_seq_row(grid, buf, width, height - 1, height - 2, 0);
+        swap_ptr((void**)&grid, (void**)&buf);
     }
 
-    /* Always want both grid and buf to be pointing at their original addresses
-    after the simulation. If the number of generations is an odd number, the
-    result would be in buf and buf and grid would be flipped. */
-    if (gens & 1) { 
-        swap_ptr(char*, buf, grid);
+    // If number of generations is odd, the result is in buf, so swap with grid. 
+    if (gens % 2) { 
+        swap_ptr((void**)&grid, (void**)&buf);
         memcpy(grid, buf, size);
     }
     delete[] buf; 
