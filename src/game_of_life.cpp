@@ -74,11 +74,15 @@ static void benchmark(int width, int height, int percent_alive, int gens)
     std::unique_ptr<char[]> world_omp((char*)aligned_alloc(64, size));
     memcpy(world_omp.get(), world_seq.get(), size);
 
+    std::unique_ptr<char[]> world_gpu((char*)aligned_alloc(64, size));
+    memcpy(world_gpu.get(), world_seq.get(), size);
+
     // Simulate every copy of the world for the same number generations on
     // different simulators. The result must be the same for all.
     double seq_time = run_game_of_life_cpu(cpu_seq, world_seq.get(), width, height, gens);
     double simd_time = run_game_of_life_cpu(cpu_simd, world_simd.get(), width, height, gens);
     double omp_time = run_game_of_life_cpu(cpu_omp, world_omp.get(), width, height, gens);
+    double gpu_time = run_game_of_life_gpu(world_gpu.get(), width, height, gens);
 
     // Print runtimes
     std::cout << "Size: " << width << " x " << height << std::endl;
@@ -89,6 +93,7 @@ static void benchmark(int width, int height, int percent_alive, int gens)
     printf("| CPU Sequential | %12.2f | %6.2fx |\n", seq_time, 1.0);
     printf("| CPU SIMD 1T    | %12.2f | %6.2fx |\n", simd_time, seq_time / simd_time);
     printf("| CPU OpenMP     | %12.2f | %6.2fx |\n", omp_time, seq_time / omp_time);
+    printf("| GPU CUDA/HIP   | %12.2f | %6.2fx |\n", gpu_time, seq_time / gpu_time);
     printf("+-----------------------------------------+\n\n");
 
     if (memcmp(world_seq.get(), world_simd.get(), size)) {
@@ -97,20 +102,24 @@ static void benchmark(int width, int height, int percent_alive, int gens)
     else if (memcmp(world_seq.get(), world_omp.get(), size)) {
         std::cerr << "CPU OpenMP is not equal to the reference implementation" << std::endl;
     }
+    else if (memcmp(world_seq.get(), world_gpu.get(), size)) {
+        std::cerr << "GPU CUDA/HIP is not equal to the reference implementation" << std::endl;
+    }
 }
 
 int main(int argc, char** argv)
 {
-    benchmark(3, 1024, 50, 100000);
-    benchmark(4, 1024, 50, 100000);
-    benchmark(6, 1024, 50, 100000);
-    benchmark(8, 1024, 50, 100000);
-    benchmark(9, 1024, 50, 100000);
-    benchmark(15, 1024, 50, 100000);
-    benchmark(16, 1024, 50, 100000);
-    benchmark(25, 1024, 50, 100000);
-    benchmark(32, 1024, 50, 100000);
-    benchmark(253, 256, 50, 100000);
-    benchmark(256, 256, 50, 100000);
+    int gens = 100000;
+    benchmark(3, 1024, 50, gens);
+    benchmark(4, 1024, 50, gens);
+    benchmark(6, 1024, 50, gens);
+    benchmark(8, 1024, 50, gens);
+    benchmark(9, 1024, 50, gens);
+    benchmark(15, 1024, 50, gens);
+    benchmark(16, 1024, 50, gens);
+    benchmark(25, 1024, 50, gens);
+    benchmark(32, 1024, 50, gens);
+    benchmark(253, 256, 50, gens);
+    benchmark(256, 256, 50, gens);
     return 0;
 }

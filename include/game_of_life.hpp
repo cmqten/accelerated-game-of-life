@@ -21,4 +21,6 @@ void cpu_simd(char* grid, int width, int height, int gens);
 /* Multi-threaded CPU SIMD with OpenMP */
 void cpu_omp(char* grid, int width, int height, int gens);
 
+double run_game_of_life_gpu(char* world, int width, int height, int gens);
+
 #endif
