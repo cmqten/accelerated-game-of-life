@@ -111,6 +111,7 @@ int main(int argc, char** argv)
     benchmark(16, 1024, 50, 100000);
     benchmark(25, 1024, 50, 100000);
     benchmark(32, 1024, 50, 100000);
+    benchmark(253, 256, 50, 100000);
     benchmark(256, 256, 50, 100000);
     return 0;
 }
