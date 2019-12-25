@@ -80,6 +80,7 @@ static void benchmark(int width, int height, int percent_alive, int gens)
     cpu_omp(world_omp.get(), width, height, gens);
     double omp_time = timer.stop();
 
+    std::cout << width << " x " << height << std::endl;
     printf("+------------------------------+\n");
     printf("| Implementation | Runtime (s) |\n");
     printf("|------------------------------|\n");
@@ -101,6 +102,15 @@ static void benchmark(int width, int height, int percent_alive, int gens)
 
 int main(int argc, char** argv)
 {
+    benchmark(3, 1024, 50, 100000);
+    benchmark(4, 1024, 50, 100000);
+    benchmark(6, 1024, 50, 100000);
+    benchmark(8, 1024, 50, 100000);
+    benchmark(9, 1024, 50, 100000);
+    benchmark(15, 1024, 50, 100000);
+    benchmark(16, 1024, 50, 100000);
+    benchmark(25, 1024, 50, 100000);
+    benchmark(32, 1024, 50, 100000);
     benchmark(256, 256, 50, 100000);
     return 0;
 }

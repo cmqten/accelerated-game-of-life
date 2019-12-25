@@ -10,9 +10,8 @@ endif()
 
 set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++11 -msse2 -mssse3 -fopenmp")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O2 -funroll-loops -funswitch-loops")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -funroll-loops -funswitch-loops -fno-tree-vectorize")
 
 include_directories(./include)
-
 file(GLOB SOURCES "${SRC_DIR}/*.cpp" "${SRC_DIR}/simulators/*.cpp")         
 add_executable(${PROJECT_NAME} ${SOURCES})

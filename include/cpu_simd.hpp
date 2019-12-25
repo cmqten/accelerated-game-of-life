@@ -86,17 +86,12 @@ static inline void cpu_simd_16_row(char* grid, char* buf, int width, int y, int 
     __m128i cells = _mm_loadu_si128((__m128i*)(p_row));
     __m128i n_cells = _mm_loadu_si128((__m128i*)(p_north));
     __m128i ne_cells = _mm_loadu_si128((__m128i*)(p_north + 1));
-    __m128i nw_cells = _mm_slli_si128(n_cells, 1);
-    ((char*)&nw_cells)[0] = *(p_north + width - 1);
-
+    __m128i nw_cells = _mm_alignr_epi8(n_cells, _mm_set1_epi8(p_north[width - 1]), 15);
     __m128i e_cells = _mm_loadu_si128((__m128i*)(p_row + 1));
-    __m128i w_cells = _mm_slli_si128(cells, 1);
-    ((char*)&w_cells)[0] = *(p_row + width - 1);
-
+    __m128i w_cells = _mm_alignr_epi8(cells, _mm_set1_epi8(p_row[width - 1]), 15);
     __m128i s_cells = _mm_loadu_si128((__m128i*)(p_south));
     __m128i se_cells = _mm_loadu_si128((__m128i*)(p_south + 1));
-    __m128i sw_cells = _mm_slli_si128(s_cells, 1);
-    ((char*)&sw_cells)[0] = *(p_south + width - 1);
+    __m128i sw_cells = _mm_alignr_epi8(s_cells, _mm_set1_epi8(p_south[width - 1]), 15);
 
     neighbors_count = n_cells;
     neighbors_count = _mm_add_epi8(neighbors_count, ne_cells);
@@ -145,17 +140,12 @@ static inline void cpu_simd_16_row(char* grid, char* buf, int width, int y, int 
     cells = _mm_loadu_si128((__m128i*)(p_row + width - 16));
     n_cells = _mm_loadu_si128((__m128i*)(p_north + width - 16));
     nw_cells = _mm_loadu_si128((__m128i*)(p_north + width - 17));
-    ne_cells = _mm_srli_si128(n_cells, 1);
-    ((char*)&ne_cells)[15] = *p_north;
-    
+    ne_cells = _mm_alignr_epi8(_mm_set1_epi8(*p_north), n_cells, 1);
     w_cells = _mm_loadu_si128((__m128i*)(p_row + width - 17));
-    e_cells = _mm_srli_si128(cells, 1);
-    ((char*)&e_cells)[15] = *p_row;
-
+    e_cells = _mm_alignr_epi8(_mm_set1_epi8(*p_row), cells, 1);
     s_cells = _mm_loadu_si128((__m128i*)(p_south + width - 16));
     sw_cells = _mm_loadu_si128((__m128i*)(p_south + width - 17));
-    se_cells = _mm_srli_si128(s_cells, 1);
-    ((char*)&se_cells)[15] = *p_south;
+    se_cells = _mm_alignr_epi8(_mm_set1_epi8(*p_south), s_cells, 1);
 
     neighbors_count = n_cells;
     neighbors_count = _mm_add_epi8(neighbors_count, nw_cells);
