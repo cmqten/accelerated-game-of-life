@@ -7,15 +7,17 @@
  * Created on: May 19, 2018
  */
 #include <omp.h>
-#include <life_cpu_simd.hpp>
+#include <stdexcept>
+
+#include <cpu_simd.hpp>
 
 const int cache_line = 64; // Depends on system, most are 64
 
 /* Processes 16 cells simultaneously, multithreaded. */
-static void life_cpu_omp_simd_16(char* grid, int width, int height, int gens, int threads)
+static void cpu_omp_simd_16(char* grid, int width, int height, int gens, int threads)
 {
     if (width < 16) {
-        throw std::invalid_argument("Width must be at least 16");
+        throw std::invalid_argument("width must be at least 16");
     }
     int size = width * height;
     char* buf = new char[size];
@@ -79,13 +81,12 @@ static void life_cpu_omp_simd_16(char* grid, int width, int height, int gens, in
 
 /* Processes n cells simultaneously, where n is the size of T, multithreaded. */
 template <class T>
-static void life_cpu_omp_simd_int(char* grid, int width, int height, int gens, int threads)
+static void cpu_omp_simd_int(char* grid, int width, int height, int gens, int threads)
 {
     int vec_len = sizeof(T);
     if (width < vec_len) {
-        throw std::invalid_argument("Width must be at least " + std::to_string(vec_len));
+        throw std::invalid_argument("width must be at least " + std::to_string(vec_len));
     }
-    
     int size = width * height;
     char* buf = new char[size];
 
@@ -147,22 +148,22 @@ static void life_cpu_omp_simd_int(char* grid, int width, int height, int gens, i
     delete[] buf;
 }
 
-void life_cpu_omp(char* grid, int width, int height, int gens)
+void cpu_omp(char* grid, int width, int height, int gens)
 {
     int threads = omp_get_num_procs();
     if (width >= 16) {
-        life_cpu_omp_simd_16(grid, width, height, gens, threads);
+        cpu_omp_simd_16(grid, width, height, gens, threads);
     }
     else if (width >= 8) {
-        life_cpu_omp_simd_int<uint64_t>(grid, width, height, gens, threads);
+        cpu_omp_simd_int<uint64_t>(grid, width, height, gens, threads);
     }
     else if (width >= 4) {
-        life_cpu_omp_simd_int<uint32_t>(grid, width, height, gens, threads);
+        cpu_omp_simd_int<uint32_t>(grid, width, height, gens, threads);
     }
     else if (width >= 2) {
-        life_cpu_omp_simd_int<uint16_t>(grid, width, height, gens, threads);
+        cpu_omp_simd_int<uint16_t>(grid, width, height, gens, threads);
     }
     else {
-        life_cpu_omp_simd_int<uint8_t>(grid, width, height, gens, threads);
+        cpu_omp_simd_int<uint8_t>(grid, width, height, gens, threads);
     }
 }

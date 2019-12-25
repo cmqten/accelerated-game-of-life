@@ -7,7 +7,8 @@
  * Created on: May 5, 2018
  */
 #include <cstring>
-#include <life.hpp>
+
+#include <game_of_life.hpp>
 #include <util.hpp>
 
 /* Processes cells in a row. */
@@ -54,7 +55,7 @@ static inline void cpu_seq_row(char* grid, char* buf, int width, int y, int ynor
     buf[idx] = cell;
 }
 
-void life_cpu_seq(char* grid, int width, int height, int gens)
+void cpu_seq(char* grid, int width, int height, int gens)
 {
     int size = width * height;
     char* buf = new char[size];

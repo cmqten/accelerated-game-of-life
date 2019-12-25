@@ -1,5 +1,5 @@
 /**
- * life_cpu_simd.hpp
+ * cpu_simd.hpp
  * 
  * Implementation of Conway's Game of Life using SIMD operations. Not portable, 
  * only guaranteed to work on an x86_64 system with SSE2 and SSSE3 extensions,
@@ -8,12 +8,11 @@
  * Author: Carl Marquez
  * Created on: May 19, 2018
  */
-#ifndef __SIM_CPU_SIMD_HPP__
-#define __SIM_CPU_SIMD_HPP__
+#ifndef __CPU_SIMD_HPP__
+#define __CPU_SIMD_HPP__
 
 #include <cstring>
 #include <x86intrin.h>
-#include <life.hpp>
 #include <util.hpp>
 
 /*******************************************************************************
@@ -22,7 +21,7 @@
  * Processes 16 cells simultaneously.
  ******************************************************************************/
 
-void life_cpu_simd_16(char* grid, int width, int height, int gens);
+void cpu_simd_16(char* grid, int width, int height, int gens);
 
 /* Calculates the next states of 16 cells in a vector. */
 static inline __m128i cpu_simd_16_alive(__m128i cells, __m128i neighbors_count)
@@ -299,13 +298,12 @@ static inline void cpu_simd_int_row(char* grid, char* buf, int width, int y, int
 
 /* Processes n cells simultaneously, where n is the size of T. */
 template <class T>
-void life_cpu_simd_int(char* grid, int width, int height, int gens)
+void cpu_simd_int(char* grid, int width, int height, int gens)
 {
     int vec_len = sizeof(T);
     if (width < vec_len) {
-        throw std::invalid_argument("Width must be at least " + std::to_string(vec_len));
+        throw std::invalid_argument("width must be at least " + std::to_string(vec_len));
     }
-    
     int size = width * height;
     char* buf = new char[size];
 

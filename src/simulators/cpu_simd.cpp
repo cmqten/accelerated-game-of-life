@@ -11,15 +11,15 @@
 #include <cstring>
 #include <stdexcept>
 
-#include <life_cpu_simd.hpp>
-#include <life.hpp>
+#include <cpu_simd.hpp>
+#include <game_of_life.hpp>
 #include <util.hpp>
 
 /* Processes 16 cells simultaneously. */
-void life_cpu_simd_16(char* grid, int width, int height, int gens)
+void cpu_simd_16(char* grid, int width, int height, int gens)
 {
     if (width < 16) {
-        throw std::invalid_argument("Width must be at least 16");
+        throw std::invalid_argument("width must be at least 16");
     }
     int size = width * height;
     char* buf = new char[size];
@@ -62,21 +62,21 @@ void life_cpu_simd_16(char* grid, int width, int height, int gens)
 
 Different width ranges are handled separately to maximize vector size for 
 maximum parallelism without overrunning a row (vector size > width). */ 
-void life_cpu_simd(char* grid, int width, int height, int gens)
+void cpu_simd(char* grid, int width, int height, int gens)
 {
     if (width >= 16) {
-        life_cpu_simd_16(grid, width, height, gens);
+        cpu_simd_16(grid, width, height, gens);
     }
     else if (width >= 8) {
-        life_cpu_simd_int<uint64_t>(grid, width, height, gens);
+        cpu_simd_int<uint64_t>(grid, width, height, gens);
     }
     else if (width >= 4) {
-        life_cpu_simd_int<uint32_t>(grid, width, height, gens);
+        cpu_simd_int<uint32_t>(grid, width, height, gens);
     }
     else if (width >= 2) {
-        life_cpu_simd_int<uint16_t>(grid, width, height, gens);
+        cpu_simd_int<uint16_t>(grid, width, height, gens);
     }
     else {
-        life_cpu_simd_int<uint8_t>(grid, width, height, gens);
+        cpu_simd_int<uint8_t>(grid, width, height, gens);
     }
 }
