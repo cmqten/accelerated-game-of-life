@@ -82,8 +82,6 @@ static void benchmark(int width, int height, int percent_alive, int gens)
     double seq_time = run_game_of_life_cpu(cpu_seq, world_seq.get(), width, height, gens);
     double simd_time = run_game_of_life_cpu(cpu_simd, world_simd.get(), width, height, gens);
     double omp_time = run_game_of_life_cpu(cpu_omp, world_omp.get(), width, height, gens);
-    double gpu_time;
-    gpu_cuda_hip(world_gpu.get(), width, height, gens, &gpu_time);
 
     // Print runtimes
     std::cout << "Size: " << width << " x " << height << std::endl;
@@ -94,7 +92,6 @@ static void benchmark(int width, int height, int percent_alive, int gens)
     printf("| CPU Sequential | %12.2f | %6.2fx |\n", seq_time, 1.0);
     printf("| CPU SIMD 1T    | %12.2f | %6.2fx |\n", simd_time, seq_time / simd_time);
     printf("| CPU OpenMP     | %12.2f | %6.2fx |\n", omp_time, seq_time / omp_time);
-    printf("| GPU CUDA/HIP   | %12.2f | %6.2fx |\n", gpu_time, seq_time / gpu_time);
     printf("+-----------------------------------------+\n\n");
 
     if (memcmp(world_seq.get(), world_simd.get(), size)) {
@@ -102,9 +99,6 @@ static void benchmark(int width, int height, int percent_alive, int gens)
     }
     else if (memcmp(world_seq.get(), world_omp.get(), size)) {
         std::cerr << "CPU OpenMP is not equal to the reference implementation" << std::endl;
-    }
-    else if (memcmp(world_seq.get(), world_gpu.get(), size)) {
-        std::cerr << "GPU CUDA/HIP is not equal to the reference implementation" << std::endl;
     }
 }
 

@@ -21,8 +21,4 @@ void cpu_simd(char* grid, int width, int height, int gens);
 /* Multi-threaded CPU SIMD with OpenMP */
 void cpu_omp(char* grid, int width, int height, int gens);
 
-/* GPU SIMD with CUDA/HIP */
-void gpu_cuda_hip(char* world, int width, int height, int gens, double* compute_time = nullptr, 
-    double* transfer_in_time = nullptr, double* transfer_out_time = nullptr);
-
 #endif
