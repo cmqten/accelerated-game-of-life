@@ -28,15 +28,26 @@ __global__ void gpu_cuda(char* world, char* buf, int width, int height)
     }
 }
 
-double run_game_of_life_gpu(char* world, int width, int height, int gens)
+void gpu_cuda_hip(char* world, int width, int height, int gens, double* compute_time, double* transfer_in_time, 
+    double* transfer_out_time)
 {
     int size = width * height;
     char* world_d;
     char* buf_d;
+    my_timer timer;
+    double compute_time_local;
+    double transfer_in_time_local;
+    double transfer_out_time_local;
+
     cudaMalloc((void**)&world_d, size);
     cudaMalloc((void**)&buf_d, size);
+    timer.start();
     cudaMemcpy(world_d, world, size, cudaMemcpyHostToDevice);
     cudaDeviceSynchronize();
+    transfer_in_time_local = timer.stop();
+    if (transfer_in_time) {
+        *transfer_in_time = transfer_in_time_local;
+    }
 
     int max_threads_per_block = 1024;
     int block_width = width;
@@ -51,7 +62,6 @@ double run_game_of_life_gpu(char* world, int width, int height, int gens)
 
     dim3 dimBlock(block_width, block_height);
 
-    my_timer timer;
     timer.start();
     for (int i = 0; i < gens / 2; i++) {
         gpu_cuda<<<36, dimBlock>>>(world_d, buf_d, width, height);
@@ -61,7 +71,12 @@ double run_game_of_life_gpu(char* world, int width, int height, int gens)
         gpu_cuda<<<36, dimBlock>>>(world_d, buf_d, width, height);
     }
     cudaDeviceSynchronize();
+    compute_time_local = timer.stop();
+    if (compute_time) {
+        *compute_time = compute_time_local;
+    }
 
+    timer.start();
     if (gens % 2) {
         cudaMemcpy(world, buf_d, size, cudaMemcpyDeviceToHost);
     }
@@ -69,5 +84,8 @@ double run_game_of_life_gpu(char* world, int width, int height, int gens)
         cudaMemcpy(world, world_d, size, cudaMemcpyDeviceToHost);
     }
     cudaDeviceSynchronize();
-    return timer.stop();
+    transfer_out_time_local = timer.stop();
+    if (transfer_out_time) {
+        *transfer_out_time = transfer_out_time_local;
+    }
 }

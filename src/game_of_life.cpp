@@ -82,7 +82,8 @@ static void benchmark(int width, int height, int percent_alive, int gens)
     double seq_time = run_game_of_life_cpu(cpu_seq, world_seq.get(), width, height, gens);
     double simd_time = run_game_of_life_cpu(cpu_simd, world_simd.get(), width, height, gens);
     double omp_time = run_game_of_life_cpu(cpu_omp, world_omp.get(), width, height, gens);
-    double gpu_time = run_game_of_life_gpu(world_gpu.get(), width, height, gens);
+    double gpu_time;
+    gpu_cuda_hip(world_gpu.get(), width, height, gens, &gpu_time);
 
     // Print runtimes
     std::cout << "Size: " << width << " x " << height << std::endl;
@@ -121,5 +122,6 @@ int main(int argc, char** argv)
     benchmark(32, 1024, 50, gens);
     benchmark(253, 256, 50, gens);
     benchmark(256, 256, 50, gens);
+    benchmark(1024, 1024, 50, 10000);
     return 0;
 }
