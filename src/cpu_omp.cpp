@@ -8,10 +8,11 @@
  */
 #include <omp.h>
 #include <stdexcept>
+#include <unistd.h>
 
 #include <cpu_simd.hpp>
 
-const int cache_line = 64; // Depends on system, most are 64
+const int cache_line_size = sysconf(_SC_LEVEL1_DCACHE_LINESIZE);; 
 
 /* Processes 16 cells simultaneously, multithreaded. */
 static void cpu_omp_simd_16(char* grid, int width, int height, int gens, int threads)
@@ -25,8 +26,8 @@ static void cpu_omp_simd_16(char* grid, int width, int height, int gens, int thr
     // Threads get at least one cache line of cells to prevent false sharing. 
     int rows_per_thread = (height + threads - 1) / threads;
     int cells_per_thread = rows_per_thread * width;
-    if (cells_per_thread < cache_line) {
-        rows_per_thread = (cache_line + width - 1) / width;
+    if (cells_per_thread < cache_line_size) {
+        rows_per_thread = (cache_line_size + width - 1) / width;
     }
 
     // Removes unused threads.
@@ -93,8 +94,8 @@ static void cpu_omp_simd_int(char* grid, int width, int height, int gens, int th
     // Threads get at least one cache line of cells to prevent false sharing. 
     int rows_per_thread = (height + threads - 1) / threads;
     int cells_per_thread = rows_per_thread * width;
-    if (cells_per_thread < cache_line) {
-        rows_per_thread = (cache_line + width - 1) / width;
+    if (cells_per_thread < cache_line_size) {
+        rows_per_thread = (cache_line_size + width - 1) / width;
     }
 
     // Removes unused threads.
