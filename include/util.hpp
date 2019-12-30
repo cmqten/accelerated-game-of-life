@@ -48,4 +48,15 @@ static inline void swap_ptr(void** a, void** b)
     *b = temp;
 }
 
+static inline int nearest_le_pow_2(int val) 
+{
+    val |= val >> 1;
+    val |= val >> 2;
+    val |= val >> 4;
+    val |= val >> 8;
+    val |= val >> 16;
+    val += 1;
+    return val >> 1;
+}
+
 #endif

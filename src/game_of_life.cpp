@@ -82,6 +82,8 @@ static void benchmark(int width, int height, int percent_alive, int gens)
     double seq_time = run_game_of_life_cpu(cpu_seq, world_seq.get(), width, height, gens);
     double simd_time = run_game_of_life_cpu(cpu_simd, world_simd.get(), width, height, gens);
     double omp_time = run_game_of_life_cpu(cpu_omp, world_omp.get(), width, height, gens);
+    double ocl_time;
+    gpu_ocl(world_gpu.get(), width, height, gens, &ocl_time);
 
     // Print runtimes
     std::cout << "Size: " << width << " x " << height << std::endl;
@@ -92,6 +94,7 @@ static void benchmark(int width, int height, int percent_alive, int gens)
     printf("| CPU Sequential | %12.2f | %6.2fx |\n", seq_time, 1.0);
     printf("| CPU SIMD 1T    | %12.2f | %6.2fx |\n", simd_time, seq_time / simd_time);
     printf("| CPU OpenMP     | %12.2f | %6.2fx |\n", omp_time, seq_time / omp_time);
+    printf("| GPU OpenCL     | %12.2f | %6.2fx |\n", ocl_time, seq_time / ocl_time);
     printf("+-----------------------------------------+\n\n");
 
     if (memcmp(world_seq.get(), world_simd.get(), size)) {
@@ -100,17 +103,20 @@ static void benchmark(int width, int height, int percent_alive, int gens)
     else if (memcmp(world_seq.get(), world_omp.get(), size)) {
         std::cerr << "CPU OpenMP is not equal to the reference implementation" << std::endl;
     }
+    else if (memcmp(world_gpu.get(), world_omp.get(), size)) {
+        std::cerr << "CPU OpenCL is not equal to the reference implementation" << std::endl;
+    }
 }
 
 int main(int argc, char** argv)
 {
     int gens = 100000;
-    benchmark(3, 1024, 50, gens);
+    //benchmark(3, 1024, 50, gens);
     benchmark(4, 1024, 50, gens);
-    benchmark(6, 1024, 50, gens);
+    //benchmark(6, 1024, 50, gens);
     benchmark(8, 1024, 50, gens);
-    benchmark(9, 1024, 50, gens);
-    benchmark(15, 1024, 50, gens);
+    //benchmark(9, 1024, 50, gens);
+    //benchmark(15, 1024, 50, gens);
     benchmark(16, 1024, 50, gens);
     benchmark(25, 1024, 50, gens);
     benchmark(32, 1024, 50, gens);
