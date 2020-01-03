@@ -150,7 +150,7 @@ void cpu_simd_int(char* grid, int width, int height, int gens)
         throw std::invalid_argument("width must be at least " + std::to_string(vec_len));
     }
     int size = width * height;
-    char* buf = new char[size];
+    char* buf = (char*)aligned_alloc(64, size);
 
     /* Grids with the same width as the size of the specified integer type T 
     are handled separately because they can be optimized even further. See 
@@ -181,7 +181,7 @@ void cpu_simd_int(char* grid, int width, int height, int gens)
         swap_ptr((void**)&buf, (void**)&grid);
         memcpy(grid, buf, size);
     }
-    delete[] buf;
+    free(buf);
 }
 
 /*******************************************************************************

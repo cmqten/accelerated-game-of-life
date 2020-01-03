@@ -22,7 +22,7 @@ void cpu_simd_16(char* grid, int width, int height, int gens)
         throw std::invalid_argument("width must be at least 16");
     }
     int size = width * height;
-    char* buf = new char[size];
+    char* buf = (char*)aligned_alloc(64, size);
 
     // Width of 16 handled separately because it can be optimized further.
     if (width == 16) {
@@ -55,7 +55,7 @@ void cpu_simd_16(char* grid, int width, int height, int gens)
         swap_ptr((void**)&grid, (void**)&buf);
         memcpy(grid, buf, size);
     }
-    delete[] buf;
+    free(buf);
 }
 
 /* Game of Life CPU SIMD

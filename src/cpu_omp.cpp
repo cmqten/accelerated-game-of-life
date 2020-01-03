@@ -22,7 +22,7 @@ static void cpu_omp_simd_16(char* grid, int width, int height, int gens, int thr
         throw std::invalid_argument("width must be at least 16");
     }
     int size = width * height;
-    char* buf = new char[size];
+    char* buf = (char*)aligned_alloc(64, size);
 
     // Threads get at least one cache line of cells to prevent false sharing. 
     int rows_per_thread = (height + threads - 1) / threads;
@@ -135,7 +135,7 @@ static void cpu_omp_simd_16(char* grid, int width, int height, int gens, int thr
     if (gens % 2) {
         memcpy(grid, buf, size);
     }
-    delete[] buf;
+    free(buf);
 }
 
 /* Processes n cells simultaneously, where n is the size of T, multithreaded. */
@@ -147,7 +147,7 @@ static void cpu_omp_simd_int(char* grid, int width, int height, int gens, int th
         throw std::invalid_argument("width must be at least " + std::to_string(vec_len));
     }
     int size = width * height;
-    char* buf = new char[size];
+    char* buf = (char*)aligned_alloc(64, size);
 
     // Threads get at least one cache line of cells to prevent false sharing. 
     int rows_per_thread = (height + threads - 1) / threads;
@@ -261,7 +261,7 @@ static void cpu_omp_simd_int(char* grid, int width, int height, int gens, int th
     if (gens % 2) {
         memcpy(grid, buf, size);
     }
-    delete[] buf;
+    free(buf);
 }
 
 void cpu_omp(char* grid, int width, int height, int gens)
