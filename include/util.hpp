@@ -41,11 +41,8 @@ public:
     };
 };
 
-static inline void swap_ptr(void** a, void** b)
-{
-    void* temp = *a;
-    *a = *b;
-    *b = temp;
+static inline bool is_power_of_2(int val) {
+    return __builtin_popcount(val) == 1;
 }
 
 static inline int nearest_le_pow_2(int val) 
@@ -57,6 +54,13 @@ static inline int nearest_le_pow_2(int val)
     val |= val >> 16;
     val += 1;
     return val >> 1;
+}
+
+static inline void swap_ptr(void** a, void** b)
+{
+    void* temp = *a;
+    *a = *b;
+    *b = temp;
 }
 
 #endif

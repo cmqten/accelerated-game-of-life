@@ -36,8 +36,7 @@ public:
         // Load kernel source
         char* program_name_copy = strdup(program_invocation_name);
         char* program_dir = dirname(program_name_copy);
-        std::string source_path(program_dir);
-        source_path += "/gpu_ocl_kernels.cl";
+        std::string source_path = std::string(program_dir) + "/gpu_ocl_kernels.cl";
         free(program_name_copy);
         std::ifstream source_file(source_path);
         std::string source_code(std::istreambuf_iterator<char>(source_file), (std::istreambuf_iterator<char>()));

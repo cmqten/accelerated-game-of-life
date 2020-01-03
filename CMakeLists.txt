@@ -12,8 +12,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -funroll-loops -funswitch-loops -fno-tree-vecto
 get_filename_component(PROJECT_DIR "." REALPATH)
 set(SRC_DIR "${PROJECT_DIR}/src")
 
-add_custom_target(link_kernels ALL ln -s -f ${SRC_DIR}/gpu_ocl_kernels.cl 
-    ${CMAKE_CURRENT_BINARY_DIR}/gpu_ocl_kernels.cl)       
+add_custom_target(link_kernels ALL ln -s -f ${SRC_DIR}/gpu_ocl_kernels.cl ${CMAKE_CURRENT_BINARY_DIR}/gpu_ocl_kernels.cl)       
 include_directories(./include)
 file(GLOB SOURCES "${SRC_DIR}/*.cpp")         
 add_executable(${PROJECT_NAME} ${SOURCES})

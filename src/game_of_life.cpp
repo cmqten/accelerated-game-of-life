@@ -19,7 +19,7 @@
 // Minimum dimension of 3 so every cell has 8 neighbors, max dimension of 16384
 // to not consume too much memory, can be increased if system has more.
 const int min_dim = 3;
-const int max_dim = 16384;
+const int max_dim = 1048576;
 
 // For error logging
 const std::string min_dim_str = std::to_string(min_dim);
@@ -104,24 +104,19 @@ static void benchmark(int width, int height, int percent_alive, int gens)
         std::cerr << "CPU OpenMP is not equal to the reference implementation" << std::endl;
     }
     else if (memcmp(world_gpu.get(), world_omp.get(), size)) {
-        std::cerr << "CPU OpenCL is not equal to the reference implementation" << std::endl;
+        std::cerr << "GPU OpenCL is not equal to the reference implementation" << std::endl;
     }
 }
 
 int main(int argc, char** argv)
 {
-    int gens = 100000;
-    //benchmark(3, 1024, 50, gens);
+    int gens = 2000;
     benchmark(4, 1024, 50, gens);
-    //benchmark(6, 1024, 50, gens);
+    benchmark(4, 1048576, 50, gens);
     benchmark(8, 1024, 50, gens);
-    //benchmark(9, 1024, 50, gens);
-    //benchmark(15, 1024, 50, gens);
-    benchmark(16, 1024, 50, gens);
-    benchmark(25, 1024, 50, gens);
-    benchmark(32, 1024, 50, gens);
-    benchmark(253, 256, 50, gens);
-    benchmark(256, 256, 50, gens);
-    benchmark(1024, 1024, 50, 10000);
+    benchmark(8, 524288, 50, gens);
+    benchmark(1024, 1024, 50, gens);
+    benchmark(2048, 1024, 50, gens);
+    benchmark(2048, 2048, 50, gens);
     return 0;
 }
