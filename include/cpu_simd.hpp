@@ -141,91 +141,6 @@ static inline void cpu_simd_int_row(char* grid, char* buf, int width, int y, int
     *(T*)(buf + i_row + width - vec_len) = cells;
 }
 
-static inline void cpu_simd_16_row_4w(char* grid, char* buf, int y, int y_north, int y_south)
-{
-    uint32_t n_row = ((uint32_t*)grid)[y_north];
-    uint32_t s_row = ((uint32_t*)grid)[y_south];
-    __m128i cells = _mm_load_si128((__m128i*)(grid + y * 4));
-
-    __m128i n_cells = _mm_insert_epi32(_mm_slli_si128(cells, 4), n_row, 0);
-    __m128i nw_cells = _mm_or_si128(_mm_slli_epi32(n_cells, 8), _mm_srli_epi32(n_cells, 24));
-    __m128i ne_cells = _mm_or_si128(_mm_srli_epi32(n_cells, 8), _mm_slli_epi32(n_cells, 24));
-    __m128i w_cells = _mm_or_si128(_mm_slli_epi32(cells, 8), _mm_srli_epi32(cells, 24));
-    __m128i e_cells = _mm_or_si128(_mm_srli_epi32(cells, 8), _mm_slli_epi32(cells, 24));
-    __m128i s_cells = _mm_insert_epi32(_mm_srli_si128(cells, 4), s_row, 3);
-    __m128i sw_cells = _mm_or_si128(_mm_slli_epi32(s_cells, 8), _mm_srli_epi32(s_cells, 24));
-    __m128i se_cells = _mm_or_si128(_mm_srli_epi32(s_cells, 8), _mm_slli_epi32(s_cells, 24));
-
-    __m128i neighbors_count = n_cells;
-    neighbors_count = _mm_add_epi8(neighbors_count, ne_cells);
-    neighbors_count = _mm_add_epi8(neighbors_count, nw_cells);
-    neighbors_count = _mm_add_epi8(neighbors_count, e_cells);
-    neighbors_count = _mm_add_epi8(neighbors_count, w_cells);
-    neighbors_count = _mm_add_epi8(neighbors_count, s_cells);
-    neighbors_count = _mm_add_epi8(neighbors_count, se_cells);
-    neighbors_count = _mm_add_epi8(neighbors_count, sw_cells);
-    
-    __m128i has_3_neighbors = _mm_cmpeq_epi8(neighbors_count, _mm_set1_epi8(3));
-    __m128i has_2_neighbors = _mm_cmpeq_epi8(neighbors_count, _mm_set1_epi8(2));
-    __m128i alive_has_2_neighbors = _mm_and_si128(cells, has_2_neighbors);
-    cells = _mm_or_si128(has_3_neighbors, alive_has_2_neighbors);
-    cells = _mm_and_si128(cells, _mm_set1_epi8(1));
-    _mm_store_si128((__m128i*)(buf + y * 4), cells);
-}
-
-/* Processes n cells simultaneously, where n is the size of T. */
-template <class T>
-void cpu_simd_int(char* grid, int width, int height, int gens)
-{
-    int vec_len = sizeof(T);
-    if (width < vec_len) {
-        throw std::invalid_argument("width must be at least " + std::to_string(vec_len));
-    }
-    int size = width * height;
-    char* buf = (char*)aligned_alloc(64, size);
-
-    /* Grids with the same width as the size of the specified integer type T 
-    are handled separately because they can be optimized even further. See 
-    cpu_simd_int_row_e(). */
-    if (width == 4) {
-        for (int i = 0; i < gens; i++) {
-            cpu_simd_16_row_4w(grid, buf, 0, height - 1, 4); 
-            for (int y = 4; y < height - 4; y += 4) {
-                cpu_simd_16_row_4w(grid, buf, y, y - 1, y + 4);
-            }
-            cpu_simd_16_row_4w(grid, buf, height - 4, height - 5, 0); 
-            swap_ptr((void**)&grid, (void**)&buf);
-        }
-    }
-    else if (width == vec_len) {
-        for (int i = 0; i < gens; i++) {
-            cpu_simd_int_row_intw<T>(grid, buf, 0, height - 1, 1); 
-            for (int y = 1; y < height - 1; y++) {
-                cpu_simd_int_row_intw<T>(grid, buf, y, y - 1, y + 1);
-            }
-            cpu_simd_int_row_intw<T>(grid, buf, height - 1, height - 2, 0); 
-            swap_ptr((void**)&grid, (void**)&buf);
-        }
-    }
-    else {
-        for (int i = 0; i < gens; i++) {
-            cpu_simd_int_row<T>(grid, buf, width, 0, height - 1, 1);
-            for (int y = 1; y < height - 1; y++) {
-                cpu_simd_int_row<T>(grid, buf, width, y, y - 1, y + 1);
-            }
-            cpu_simd_int_row<T>(grid, buf, width, height - 1, height - 2, 0); 
-            swap_ptr((void**)&grid, (void**)&buf);
-        }
-    }
-
-    // If number of generations is odd, the result is in buf, so swap with grid. 
-    if (gens % 2) { 
-        swap_ptr((void**)&buf, (void**)&grid);
-        memcpy(grid, buf, size);
-    }
-    free(buf);
-}
-
 /*******************************************************************************
  * CPU SIMD 128-bit vector SSE2/SSSE3
  * 
@@ -240,8 +155,6 @@ void cpu_simd_int(char* grid, int width, int height, int gens)
 #define shift_in_last_16(vec, val) _mm_alignr_epi8(_mm_set1_epi8(val), vec, 1)
 #endif
 
-void cpu_simd_16(char* grid, int width, int height, int gens);
-
 #if defined __SSE2__ && defined __SSSE3__
 /* Calculates the next states of 16 cells in a vector. */
 static inline __m128i cpu_simd_16_alive(__m128i cells, __m128i neighbors_count)
@@ -253,6 +166,73 @@ static inline __m128i cpu_simd_16_alive(__m128i cells, __m128i neighbors_count)
     return _mm_and_si128(cells, _mm_set1_epi8(1));
 }
 #endif
+
+static inline void cpu_simd_16_row_4w(char* grid, char* buf, int y, int y_north, int y_south)
+{
+#if defined __SSE2__ && defined __SSSE3__
+    uint32_t n_row = ((uint32_t*)grid)[y_north];
+    uint32_t s_row = ((uint32_t*)grid)[y_south];
+    __m128i cells = _mm_load_si128((__m128i*)(grid + y * 4));
+
+#ifdef __SSE4_1__
+    __m128i n_cells = _mm_insert_epi32(_mm_slli_si128(cells, 4), n_row, 0);
+    __m128i s_cells = _mm_insert_epi32(_mm_srli_si128(cells, 4), s_row, 3);
+#else
+    __m128i n_cells = _mm_or_si128(_mm_slli_si128(cells, 4), _mm_set_epi32(0, 0, 0, n_row));
+    __m128i s_cells = _mm_or_si128(_mm_srli_si128(cells, 4), _mm_set_epi32(s_row, 0, 0, 0));
+#endif
+    __m128i nw_cells = _mm_or_si128(_mm_slli_epi32(n_cells, 8), _mm_srli_epi32(n_cells, 24));
+    __m128i ne_cells = _mm_or_si128(_mm_srli_epi32(n_cells, 8), _mm_slli_epi32(n_cells, 24));
+    __m128i w_cells = _mm_or_si128(_mm_slli_epi32(cells, 8), _mm_srli_epi32(cells, 24));
+    __m128i e_cells = _mm_or_si128(_mm_srli_epi32(cells, 8), _mm_slli_epi32(cells, 24));
+    __m128i sw_cells = _mm_or_si128(_mm_slli_epi32(s_cells, 8), _mm_srli_epi32(s_cells, 24));
+    __m128i se_cells = _mm_or_si128(_mm_srli_epi32(s_cells, 8), _mm_slli_epi32(s_cells, 24));
+
+    __m128i neighbors_count = n_cells;
+    neighbors_count = _mm_add_epi8(neighbors_count, ne_cells);
+    neighbors_count = _mm_add_epi8(neighbors_count, nw_cells);
+    neighbors_count = _mm_add_epi8(neighbors_count, e_cells);
+    neighbors_count = _mm_add_epi8(neighbors_count, w_cells);
+    neighbors_count = _mm_add_epi8(neighbors_count, s_cells);
+    neighbors_count = _mm_add_epi8(neighbors_count, se_cells);
+    neighbors_count = _mm_add_epi8(neighbors_count, sw_cells);
+    
+    cells = cpu_simd_16_alive(cells, neighbors_count);
+    _mm_store_si128((__m128i*)(buf + y * 4), cells);
+#else
+    // First two rows
+    uint32_t n_row = ((uint32_t*)grid)[y_north];
+    uint32_t s_row = ((uint32_t*)grid)[y + 2];
+    uint64_t cells = *(uint64_t*)(grid + y * 4); 
+    uint64_t n_cells = (cells << 32) | (uint64_t)n_row;
+    uint64_t s_cells = (cells >> 32) | ((uint64_t)s_row << 32);
+    uint64_t ne_cells = ((n_cells >> 8) & 0xffffff00ffffff) | ((n_cells & 0xff000000ff) << 24);
+    uint64_t nw_cells = ((n_cells & 0xffffff00ffffff) << 8) | ((n_cells >> 24) & 0xff000000ff);
+    uint64_t e_cells = ((cells >> 8) & 0xffffff00ffffff) | ((cells & 0xff000000ff) << 24);
+    uint64_t w_cells = ((cells & 0xffffff00ffffff) << 8) | ((cells >> 24) & 0xff000000ff);
+    uint64_t se_cells = ((s_cells >> 8) & 0xffffff00ffffff) | ((s_cells & 0xff000000ff) << 24);
+    uint64_t sw_cells = ((s_cells & 0xffffff00ffffff) << 8) | ((s_cells >> 24) & 0xff000000ff);
+    uint64_t neighbors_count = n_cells + nw_cells + ne_cells + w_cells + e_cells + s_cells + sw_cells + se_cells;
+    cells = cpu_simd_int_alive<uint64_t>(cells, neighbors_count);
+    *(uint64_t*)(buf + y * 4) = cells; 
+
+    // Last two rows
+    n_row = ((uint32_t*)grid)[y + 1];
+    s_row = ((uint32_t*)grid)[y_south];
+    cells = *(uint64_t*)(grid + (y * 4) + 8); 
+    n_cells = (cells << 32) | (uint64_t)n_row;
+    s_cells = (cells >> 32) | ((uint64_t)s_row << 32);
+    ne_cells = ((n_cells >> 8) & 0xffffff00ffffff) | ((n_cells & 0xff000000ff) << 24);
+    nw_cells = ((n_cells & 0xffffff00ffffff) << 8) | ((n_cells >> 24) & 0xff000000ff);
+    e_cells = ((cells >> 8) & 0xffffff00ffffff) | ((cells & 0xff000000ff) << 24);
+    w_cells = ((cells & 0xffffff00ffffff) << 8) | ((cells >> 24) & 0xff000000ff);
+    se_cells = ((s_cells >> 8) & 0xffffff00ffffff) | ((s_cells & 0xff000000ff) << 24);
+    sw_cells = ((s_cells & 0xffffff00ffffff) << 8) | ((s_cells >> 24) & 0xff000000ff);
+    neighbors_count = n_cells + nw_cells + ne_cells + w_cells + e_cells + s_cells + sw_cells + se_cells;
+    cells = cpu_simd_int_alive<uint64_t>(cells, neighbors_count);
+    *(uint64_t*)(buf + (y * 4) + 8) = cells;
+#endif
+}
 
 /* Processes rows with exactly 16 width. */
 static inline void cpu_simd_16_row_16w(char* grid, char* buf, int y, int y_north, int y_south)
